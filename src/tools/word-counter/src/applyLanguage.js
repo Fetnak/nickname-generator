@@ -1,4 +1,4 @@
-import languages from "../lang/all.js";
+import languages from "./lang/all.js";
 
 export const applyLanguage = (languageCode) => {
   let langParam = languages[languageCode];

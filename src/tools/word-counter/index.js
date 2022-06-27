@@ -1,14 +1,16 @@
 import fs from "fs";
 import util from "util";
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
-import { applyLanguage } from "./src/functions/applyLanguage.js";
-import { initializeIsLetterFunc } from "./src/functions/isLetter.js";
+import dayjs from "dayjs";
+import * as uuid from "uuid";
+import { applyLanguage } from "./src/applyLanguage.js";
+import { initializeIsLetterFunc } from "./src/isLetter.js";
 
 const countWords = (args) => {
-  let langParam, isLetter;
+  const startExecution = Date.now();
+  const preparedUuid = uuid.validate(args.guid) ? args.guid : uuid.v4();
 
-  const uuid = uuidv4();
+  let langParam, isLetter;
 
   const start = (args) => {
     langParam = applyLanguage(args.language);
@@ -16,25 +18,27 @@ const countWords = (args) => {
 
     let allWordsFromText = {
       info: {
-        uuid,
+        uuid: preparedUuid,
         name: path.basename(args.input, ".txt"),
-        createdAt: "",
+        createdAt: undefined,
         alphabet: langParam.alphabet,
-        sourceSize: fs.statSync(args.input).size,
+        sourceSize: fs.statSync(args.input).size.toString() + " bytes",
+        textProcessingTime: undefined,
         language: langParam.language,
+        vesrion: process.env.npm_package_version,
       },
       data: {},
     };
 
     try {
-      console.log(args.output);
-      args.output += "/" + uuid;
+      args.outputFile = args.output + "/words-" + preparedUuid;
 
       const textFileReadStream = fs.createReadStream(args.input, {
         highWaterMark: args.chunk,
       });
-      fs.writeFileSync(args.output + ".data", "");
-      fs.writeFileSync(args.output + ".info", "");
+      fs.promises.mkdir(args.output, { recursive: true }).catch(console.error);
+      fs.writeFileSync(args.outputFile + "-data.json", "");
+      fs.writeFileSync(args.outputFile + "-info.json", "");
 
       const startExecution = Date.now();
       let chunkCounter = 1;
@@ -49,10 +53,13 @@ const countWords = (args) => {
       });
 
       textFileReadStream.on("end", () => {
-        allWordsFromText.info.createdAt = new Date().toISOString();
         if (args.sort !== "none") allWordsFromText.data = SortWordsInObject(args.sort, allWordsFromText.data);
-        fs.writeFileSync(args.output + ".info", JSON.stringify(allWordsFromText.info));
-        fs.writeFileSync(args.output + ".data", JSON.stringify(allWordsFromText.data));
+
+        allWordsFromText.info.createdAt = dayjs(Date.now()).format("YYYY-MM-DD HH-mm-ss");
+        allWordsFromText.info.textProcessingTime = (Date.now() - startExecution).toString() + " ms";
+
+        fs.writeFileSync(args.outputFile + "-data.json", JSON.stringify(allWordsFromText.data));
+        fs.writeFileSync(args.outputFile + "-info.json", JSON.stringify(allWordsFromText.info));
       });
     } catch (error) {
       console.log("Unable to create output file or read input file!");

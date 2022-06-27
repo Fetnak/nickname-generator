@@ -1,6 +1,8 @@
 import yargs from "yargs";
 import xmlToTxtConverter from "./tools/xml-to-txt-converter/index.js";
-import wordsCounter from "./tools/words-counter/index.js";
+import wordCounter from "./tools/word-counter/index.js";
+import uuidv4Generator from "./tools/uuidv4-generator/index.js";
+import readDir from "./functions/read-dir.js";
 
 const argv = yargs(process.argv.slice(2));
 
@@ -32,9 +34,6 @@ argv.command({
       choices: [1, 2, 4, 8, 16, 32, 64, 128, 256],
       default: 16,
     },
-    version: {
-      hidden: true,
-    },
   },
   handler(argv) {
     argv.chunk *= 1024 * 1024;
@@ -43,8 +42,8 @@ argv.command({
 });
 
 argv.command({
-  command: "wordsCounter",
-  describe: "Removes all xml tags from file",
+  command: "wordCounter",
+  describe: "Counts all words in text file and places the result into the data file and the information file",
   builder: {
     help: {
       alias: "h",
@@ -59,7 +58,7 @@ argv.command({
     },
     output: {
       alias: "o",
-      describe: "Path to the folder where you want to save the result file and the information file",
+      describe: "Path to the folder where you want to save the result into the data file and the information file",
       type: "string",
       normalize: true,
       default: "./resources/words",
@@ -85,8 +84,50 @@ argv.command({
       choices: ["none", "asc", "desc"],
       default: "none",
     },
-    version: {
-      hidden: true,
+    guid: {
+      alias: "g",
+      describe: "Select your own guid",
+      type: "string",
+    },
+  },
+  handler(argv) {
+    argv.chunk *= 1024 * 1024;
+    wordCounter.countWords(argv);
+  },
+});
+
+argv.command({
+  command: "modelCreator",
+  describe: "Use files from a word counter tool to create a model to create nicknames for nickname generator",
+  builder: {
+    help: {
+      alias: "h",
+      describe: "Show help",
+    },
+    input: {
+      alias: "i",
+      describe: "Path to the folder with files from a word counter tool",
+      demandOption: true,
+      type: "string",
+      normalize: true,
+    },
+    output: {
+      alias: "o",
+      describe: "Path to the folder where you want to save the model",
+      type: "string",
+      normalize: true,
+      default: "./resources/models",
+    },
+    sequence: {
+      alias: "s",
+      describe: "Size of the character sequence to be processed to create the model",
+      type: "number",
+      default: 3,
+    },
+    parameters: {
+      alias: "p",
+      describe: "Path to parameters file, which will be applied during creating model",
+      type: "string",
     },
   },
   handler(argv) {
@@ -95,4 +136,39 @@ argv.command({
   },
 });
 
-argv.wrap(argv.terminalWidth()).parse();
+argv.command({
+  command: "uuidv4Generator",
+  describe: "Generates multiple UUIDs",
+  builder: {
+    help: {
+      alias: "h",
+      describe: "Show help",
+    },
+    count: {
+      alias: "c",
+      describe: "How many uuid should be generated",
+      type: "number",
+      default: 10,
+    },
+    form: {
+      alias: "f",
+      describe: "In what form to provide uuid",
+      type: "string",
+      default: "console",
+      choices: ["console", "json", "text"],
+    },
+    output: {
+      alias: "o",
+      describe: "Path to save file with UUIDs",
+      type: "string",
+      default: "./resources/UUIDs/<filename>",
+    },
+  },
+  handler(argv) {
+    uuidv4Generator.generateUUIDs(argv);
+  },
+});
+
+argv.wrap(argv.terminalWidth()).version(false).parse();
+
+console.log("Use option --help to see commands")

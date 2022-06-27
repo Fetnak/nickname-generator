@@ -7,7 +7,7 @@ export const initializeIsLetterFunc = (langParam) => {
       return false;
     };
   } else {
-    isLetterRegex = new RegExp("[" + langParam.alphabet + "]");
+    const isLetterRegex = new RegExp("[" + langParam.alphabet + "]");
     isLetter = (char) => {
       return char.match(isLetterRegex);
     };
