@@ -2,9 +2,11 @@ lockfileVersion: 5.4
 
 specifiers:
   eslint: ^8.18.0
+  uuid: ^8.3.2
   yargs: ^17.5.1
 
 dependencies:
+  uuid: 8.3.2
   yargs: 17.5.1
 
 devDependencies:
@@ -569,6 +571,11 @@ packages:
     dependencies:
       punycode: 2.1.1
     dev: true
+
+  /uuid/8.3.2:
+    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    hasBin: true
+    dev: false
 
   /v8-compile-cache/2.3.0:
     resolution: {integrity: sha512-l8lCEmLcLYZh4nbunNZvQCJc5pv7+RCwa8q/LdUx8u7lsWvPDKmpodJAJNwkAhJC//dFY48KuIEmjtd4RViDrA==}

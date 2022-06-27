@@ -27,6 +27,7 @@
     "eslint": "^8.18.0"
   },
   "dependencies": {
+    "uuid": "^8.3.2",
     "yargs": "^17.5.1"
   }
 }

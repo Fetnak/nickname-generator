@@ -8,6 +8,10 @@ argv.command({
   command: "xmlToTxtConverter",
   describe: "Removes all xml tags from file",
   builder: {
+    help: {
+      alias: "h",
+      describe: "Show help",
+    },
     input: {
       alias: "i",
       describe: "Path to the xml which needs to be converted",
@@ -28,6 +32,9 @@ argv.command({
       choices: [1, 2, 4, 8, 16, 32, 64, 128, 256],
       default: 16,
     },
+    version: {
+      hidden: true,
+    },
   },
   handler(argv) {
     argv.chunk *= 1024 * 1024;
@@ -39,6 +46,10 @@ argv.command({
   command: "wordsCounter",
   describe: "Removes all xml tags from file",
   builder: {
+    help: {
+      alias: "h",
+      describe: "Show help",
+    },
     input: {
       alias: "i",
       describe: "Path to the text file which needs to be analyzed",
@@ -51,6 +62,7 @@ argv.command({
       describe: "Path to the folder where you want to save the result file and the information file",
       type: "string",
       normalize: true,
+      default: "./resources/words",
     },
     chunk: {
       alias: "c",
@@ -73,6 +85,9 @@ argv.command({
       choices: ["none", "asc", "desc"],
       default: "none",
     },
+    version: {
+      hidden: true,
+    },
   },
   handler(argv) {
     argv.chunk *= 1024 * 1024;
@@ -80,4 +95,4 @@ argv.command({
   },
 });
 
-argv.parse();
+argv.wrap(argv.terminalWidth()).parse();
