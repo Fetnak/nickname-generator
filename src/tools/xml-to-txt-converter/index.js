@@ -1,19 +1,19 @@
 import fs from "fs";
 import util from "util";
 
-const convert = (argv) => {
-  if (!argv.output) argv.output = argv.input + ".txt";
+const convert = (args) => {
+  if (!args.output) args.output = args.input + ".txt";
   try {
-    fs.writeFileSync(argv.output, "");
-    const xmlWriteStream = fs.createWriteStream(argv.output);
-    const xmlReadStream = fs.createReadStream(argv.input, {
-      highWaterMark: argv.chunk * 1024 * 1024,
+    fs.writeFileSync(args.output, "");
+    const xmlWriteStream = fs.createWriteStream(args.output);
+    const xmlReadStream = fs.createReadStream(args.input, {
+      highWaterMark: args.chunk,
     });
     console.log("Starting...");
 
     let startExecution = Date.now();
     let chunkCounter = 1;
-    let chunksCount = Math.ceil(fs.statSync(argv.input).size / (argv.chunk * 1024 * 1024));
+    let chunksCount = Math.ceil(fs.statSync(args.input).size / args.chunk);
 
     xmlReadStream.on("data", (chunk) => {
       console.log(util.format("Started XML Chunk: %s/%s. %s", chunkCounter, chunksCount, (Date.now() - startExecution).toString().padStart(8) + " ms"));
@@ -46,7 +46,7 @@ const removeTags = (str) => {
     if (temp === "") continue;
     result += temp + " ";
   }
-  return result
+  return result;
 };
 
 export default { convert };
