@@ -1,40 +1,50 @@
 import fs from "fs";
+import path from "path";
+import dayjs from "dayjs";
+import * as uuid from "uuid";
 
 const createModel = (args) => {
   const startExecution = Date.now();
+  const preparedUuid = uuid.validate(args.output_uuid) ? args.output_uuid : uuid.v4();
 
-  let weightsObject = {
-    info: {
-      name: NAME,
-      createdAt: "",
-      alphabet: ALPHABET,
-      maxSequenceLength: 0,
-      sourceSize: fs.statSync(TEXT_PATH).size,
-      textProcessingTime: undefined,
-      wordsProcessingTine: undefined,
-      vesrion: process.env.npm_package_version,
-      language: LANGUAGE,
-      dummy: DUMMY,
-    },
-    data: {},
+  const wordsInfo = JSON.parse(fs.readFileSync(path.join(args.input, "words-" + args.input_uuid + "-info.json")));
+  const wordsData = JSON.parse(fs.readFileSync(path.join(args.input, "words-" + args.input_uuid + "-data.json")));
+
+  const DUMMY = "_";
+
+  let modelInfo = {
+    uuid: preparedUuid,
+    uuidWords: wordsInfo.uuid,
+    name: wordsInfo.name,
+    createdAt: undefined,
+    alphabet: wordsInfo.alphabet,
+    maxSequenceLength: 0,
+    sourceSize: wordsInfo.sourceSize,
+    toWordsProcessingTime: wordsInfo.toWordsProcessingTime,
+    toModelProcessingTime: undefined,
+    language: wordsInfo.language,
+    vesrion: process.env.npm_package_version,
+    dummy: DUMMY,
   };
+
+  let modelData = {};
 
   const start = (args) => {
-    args.outputFile = args.output + "/words-" + uuid;
+    console.log(args);
+    processAllWordsFromText(modelData, args.sequence, wordsData);
 
-    const wordsObject = fs.readFileSync(JSON_PATH);
+    modelInfo.createdAt = dayjs(Date.now()).format("YYYY-MM-DD HH-mm-ss");
+    modelInfo.toModelProcessingTime = (Date.now() - startExecution).toString() + " ms";
 
-    processAllWordsFromText(weightsObject.data, args.sequence, allWordsFromText.data);
-
-    fs.writeFileSync(WIGHTS_PATH, JSON.stringify(weightsObject));
-    console.log(weightsObject.info);
+    fs.writeFileSync(path.join(args.input, "model-" + args.input_uuid + "-info.json"), JSON.stringify(modelInfo));
+    fs.writeFileSync(path.join(args.input, "model-" + args.input_uuid + "-data.json"), JSON.stringify(modelData));
+    console.log(modelInfo);
   };
 
-  const processAllWordsFromText = (result, sequenceLength, array) => {
-    const words = Object.keys(allWordsFromText);
+  const processAllWordsFromText = (result, sequenceLength, wordsData) => {
+    const words = Object.keys(wordsData);
     for (let i = words.length; i--; ) {
-      processOneWord(words[i], array[words[i]], sequenceLength, result);
-      calculateProgressBar(i, words.length, 80, 100);
+      processOneWord(words[i], wordsData[words[i]], sequenceLength, result);
     }
   };
   const processOneWord = (word, multiplier, sequenceLength, result) => {
@@ -73,15 +83,7 @@ const createModel = (args) => {
     else result[weights] = multiplier;
   };
 
-  const WORD_LENGTH = 5;
-  const NAME = process.argv[3];
-  //const TEXT_PATH = "resources/text_" + NAME + ".txt";
-  const TEXT_PATH = process.argv[4];
-  const WIGHTS_PATH = "resources/models/" + NAME + ".json";
-  const COMPUTED_WORDS_PATH = "resources/computedWords/" + NAME + ".json";
-  const DUMMY = "_";
-
-  start();
+  start(args);
 };
 
 export default { createModel };

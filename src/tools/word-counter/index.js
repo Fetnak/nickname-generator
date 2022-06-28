@@ -8,7 +8,7 @@ import { initializeIsLetterFunc } from "./src/isLetter.js";
 
 const countWords = (args) => {
   const startExecution = Date.now();
-  const preparedUuid = uuid.validate(args.guid) ? args.guid : uuid.v4();
+  const preparedUuid = uuid.validate(args.uuid) ? args.uuid : uuid.v4();
 
   let langParam, isLetter;
 
@@ -16,19 +16,18 @@ const countWords = (args) => {
     langParam = applyLanguage(args.language);
     isLetter = initializeIsLetterFunc(langParam);
 
-    let allWordsFromText = {
-      info: {
-        uuid: preparedUuid,
-        name: path.basename(args.input, ".txt"),
-        createdAt: undefined,
-        alphabet: langParam.alphabet,
-        sourceSize: fs.statSync(args.input).size.toString() + " bytes",
-        textProcessingTime: undefined,
-        language: langParam.language,
-        vesrion: process.env.npm_package_version,
-      },
-      data: {},
+    let wordsInfo = {
+      uuid: preparedUuid,
+      name: path.basename(args.input, ".txt"),
+      createdAt: undefined,
+      alphabet: langParam.alphabet,
+      sourceSize: fs.statSync(args.input).size.toString() + " bytes",
+      toWordsProcessingTime: undefined,
+      language: langParam.language,
+      vesrion: process.env.npm_package_version,
     };
+
+    let wordsData = {};
 
     try {
       args.outputFile = args.output + "/words-" + preparedUuid;
@@ -47,19 +46,19 @@ const countWords = (args) => {
       textFileReadStream.on("data", (chunk) => {
         console.log(util.format("Started Text Chunk: %s/%s. %s", chunkCounter, chunksCount, (Date.now() - startExecution).toString().padStart(8) + " ms"));
 
-        splitTextFileToWordsArray(chunk.toString("utf-8"), allWordsFromText.data);
+        splitTextFileToWordsArray(chunk.toString("utf-8"), wordsData);
 
         chunkCounter++;
       });
 
       textFileReadStream.on("end", () => {
-        if (args.sort !== "none") allWordsFromText.data = SortWordsInObject(args.sort, allWordsFromText.data);
+        if (args.sort !== "none") wordsData = SortWordsInObject(args.sort, wordsData);
 
-        allWordsFromText.info.createdAt = dayjs(Date.now()).format("YYYY-MM-DD HH-mm-ss");
-        allWordsFromText.info.textProcessingTime = (Date.now() - startExecution).toString() + " ms";
+        wordsInfo.createdAt = dayjs(Date.now()).format("YYYY-MM-DD HH-mm-ss");
+        wordsInfo.toWordsProcessingTime = (Date.now() - startExecution).toString() + " ms";
 
-        fs.writeFileSync(args.outputFile + "-data.json", JSON.stringify(allWordsFromText.data));
-        fs.writeFileSync(args.outputFile + "-info.json", JSON.stringify(allWordsFromText.info));
+        fs.writeFileSync(args.outputFile + "-data.json", JSON.stringify(wordsData));
+        fs.writeFileSync(args.outputFile + "-info.json", JSON.stringify(wordsInfo));
       });
     } catch (error) {
       console.log("Unable to create output file or read input file!");

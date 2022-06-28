@@ -2,10 +2,12 @@ import yargs from "yargs";
 import xmlToTxtConverter from "./tools/xml-to-txt-converter/index.js";
 import wordCounter from "./tools/word-counter/index.js";
 import uuidv4Generator from "./tools/uuidv4-generator/index.js";
+import modelCreator from "./tools/model-creator/index.js";
 import readDir from "./functions/read-dir.js";
 
 const argv = yargs(process.argv.slice(2));
 
+// xmlToTxtConverter
 argv.command({
   command: "xmlToTxtConverter",
   describe: "Removes all xml tags from file",
@@ -41,6 +43,7 @@ argv.command({
   },
 });
 
+// wordCounter
 argv.command({
   command: "wordCounter",
   describe: "Counts all words in text file and places the result into the data file and the information file",
@@ -62,6 +65,7 @@ argv.command({
       type: "string",
       normalize: true,
       default: "./resources/words",
+      hidden: true,
     },
     chunk: {
       alias: "c",
@@ -84,9 +88,9 @@ argv.command({
       choices: ["none", "asc", "desc"],
       default: "none",
     },
-    guid: {
-      alias: "g",
-      describe: "Select your own guid",
+    uuid: {
+      alias: "u",
+      describe: "Select your own uuid instead of random",
       type: "string",
     },
   },
@@ -96,6 +100,7 @@ argv.command({
   },
 });
 
+// modelCreator
 argv.command({
   command: "modelCreator",
   describe: "Use files from a word counter tool to create a model to create nicknames for nickname generator",
@@ -105,18 +110,26 @@ argv.command({
       describe: "Show help",
     },
     input: {
-      alias: "i",
       describe: "Path to the folder with files from a word counter tool",
-      demandOption: true,
       type: "string",
       normalize: true,
+      default: "./resources/words",
+      hidden: true,
+    },
+    input_uuid: {
+      alias: "i",
+      describe: "UUID of a file with words",
+    },
+    output_uuid: {
+      alias: "o",
+      describe: "UUID for result model file",
     },
     output: {
-      alias: "o",
       describe: "Path to the folder where you want to save the model",
       type: "string",
       normalize: true,
       default: "./resources/models",
+      hidden: true,
     },
     sequence: {
       alias: "s",
@@ -129,13 +142,26 @@ argv.command({
       describe: "Path to parameters file, which will be applied during creating model",
       type: "string",
     },
+    list: {
+      alias: "l",
+      describe: "Display all available files from word counter tool",
+      type: "boolean",
+    },
   },
   handler(argv) {
-    argv.chunk *= 1024 * 1024;
-    wordsCounter.countWords(argv);
+    if (argv.list) {
+      readDir.displayInfo(argv.input, "-info.json");
+      process.exit();
+    }
+    if (argv.input_uuid === undefined) {
+      console.log("Option --input_uuid is empty!");
+      process.exit();
+    }
+    modelCreator.createModel(argv);
   },
 });
 
+// uuidv4Generator
 argv.command({
   command: "uuidv4Generator",
   describe: "Generates multiple UUIDs",
@@ -171,4 +197,4 @@ argv.command({
 
 argv.wrap(argv.terminalWidth()).version(false).parse();
 
-console.log("Use option --help to see commands")
+if (process.argv.slice(2) === []) console.log("Use option --help to see commands");
