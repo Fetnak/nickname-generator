@@ -3,6 +3,7 @@ import xmlToTxtConverter from "./tools/xml-to-txt-converter/index.js";
 import wordCounter from "./tools/word-counter/index.js";
 import uuidv4Generator from "./tools/uuidv4-generator/index.js";
 import modelCreator from "./tools/model-creator/index.js";
+import nicknameGenerator from "./tools/nickname-generator/index.js";
 import readDir from "./functions/read-dir.js";
 
 const argv = yargs(process.argv.slice(2));
@@ -192,6 +193,76 @@ argv.command({
   },
   handler(argv) {
     uuidv4Generator.generateUUIDs(argv);
+  },
+});
+
+// nicknameGenerator
+argv.command({
+  command: "nicknameGenerator",
+  describe: "Generates multiple nicknames",
+  builder: {
+    help: {
+      alias: "h",
+      describe: "Show help",
+    },
+    input: {
+      describe: "Path to the folder with models",
+      type: "string",
+      default: "./resources/models",
+      normalize: true,
+      hidden: true,
+    },
+    uuid: {
+      alias: "u",
+      describe: "UUID of model",
+      type: "string"
+    },
+    minimum: {
+      alias: "min",
+      describe: "Minimum number of characters in a nickname",
+      type: "number",
+      default: 4,
+    },
+    maximum: {
+      alias: "max",
+      describe: "Maximum number of characters in a nickname",
+      type: "number",
+      default: 8,
+    },
+    accuracy: {
+      alias: "a",
+      describe: "Number of previous characters, which will be used to generate next character",
+      type: "number",
+      default: 3,
+    },
+    count: {
+      alias: "c",
+      describe: "How many nicknames should be generated",
+      type: "number",
+      default: 240,
+    },
+    columns: {
+      alias: "col",
+      describe: "How many columns will the nicknames be sorted into",
+      type: "number",
+      default: 12,
+    },
+    form: {
+      alias: "f",
+      describe: "In what form to provide nicknames",
+      type: "string",
+      default: "console",
+      choices: ["console", "json", "text"],
+    },
+    output: {
+      alias: "o",
+      describe: "Path to save file with nicknames",
+      normalize: true,
+      type: "string",
+    },
+  },
+  handler(argv) {
+    nicknameGenerator.generateNickname(argv);
   },
 });
 

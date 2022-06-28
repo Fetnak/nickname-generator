@@ -59,6 +59,7 @@ const countWords = (args) => {
 
         fs.writeFileSync(args.outputFile + "-data.json", JSON.stringify(wordsData));
         fs.writeFileSync(args.outputFile + "-info.json", JSON.stringify(wordsInfo));
+        console.log(wordsInfo)
       });
     } catch (error) {
       console.log("Unable to create output file or read input file!");

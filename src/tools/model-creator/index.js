@@ -23,21 +23,25 @@ const createModel = (args) => {
     toWordsProcessingTime: wordsInfo.toWordsProcessingTime,
     toModelProcessingTime: undefined,
     language: wordsInfo.language,
-    vesrion: process.env.npm_package_version,
+    version: process.env.npm_package_version,
     dummy: DUMMY,
   };
 
   let modelData = {};
 
   const start = (args) => {
-    console.log(args);
+    fs.promises.mkdir(args.output, { recursive: true }).catch(console.error);
+    fs.writeFileSync(path.join(args.output, "model-" + args.output_uuid + "-info.json"), "");
+    fs.writeFileSync(path.join(args.output, "model-" + args.output_uuid + "-data.json"), "");
+
     processAllWordsFromText(modelData, args.sequence, wordsData);
 
     modelInfo.createdAt = dayjs(Date.now()).format("YYYY-MM-DD HH-mm-ss");
+    modelInfo.maxSequenceLength = maxSequenceLengthMeasurer;
     modelInfo.toModelProcessingTime = (Date.now() - startExecution).toString() + " ms";
 
-    fs.writeFileSync(path.join(args.input, "model-" + args.input_uuid + "-info.json"), JSON.stringify(modelInfo));
-    fs.writeFileSync(path.join(args.input, "model-" + args.input_uuid + "-data.json"), JSON.stringify(modelData));
+    fs.writeFileSync(path.join(args.output, "model-" + args.output_uuid + "-info.json"), JSON.stringify(modelInfo));
+    fs.writeFileSync(path.join(args.output, "model-" + args.output_uuid + "-data.json"), JSON.stringify(modelData));
     console.log(modelInfo);
   };
 
