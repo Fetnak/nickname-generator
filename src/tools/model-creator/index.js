@@ -31,8 +31,8 @@ const createModel = (args) => {
 
   const start = (args) => {
     fs.promises.mkdir(args.output, { recursive: true }).catch(console.error);
-    fs.writeFileSync(path.join(args.output, "model-" + args.output_uuid + "-info.json"), "");
-    fs.writeFileSync(path.join(args.output, "model-" + args.output_uuid + "-data.json"), "");
+    fs.writeFileSync(path.join(args.output, "model-" + preparedUuid + "-info.json"), "");
+    fs.writeFileSync(path.join(args.output, "model-" + preparedUuid + "-data.json"), "");
 
     processAllWordsFromText(modelData, args.sequence, wordsData);
 
@@ -40,8 +40,8 @@ const createModel = (args) => {
     modelInfo.maxSequenceLength = maxSequenceLengthMeasurer;
     modelInfo.toModelProcessingTime = (Date.now() - startExecution).toString() + " ms";
 
-    fs.writeFileSync(path.join(args.output, "model-" + args.output_uuid + "-info.json"), JSON.stringify(modelInfo));
-    fs.writeFileSync(path.join(args.output, "model-" + args.output_uuid + "-data.json"), JSON.stringify(modelData));
+    fs.writeFileSync(path.join(args.output, "model-" + preparedUuid + "-info.json"), JSON.stringify(modelInfo));
+    fs.writeFileSync(path.join(args.output, "model-" + preparedUuid + "-data.json"), JSON.stringify(modelData));
     console.log(modelInfo);
   };
 
@@ -53,11 +53,11 @@ const createModel = (args) => {
   };
   const processOneWord = (word, multiplier, sequenceLength, result) => {
     for (let maxSequenceLength = sequenceLength + 1, wl = word.length; maxSequenceLength--; ) {
-      if (wl > maxSequenceLength) addSomeLettersToResult(word, maxSequenceLength, multiplier, result);
+      if (wl > maxSequenceLength) addCharactersToResult(word, maxSequenceLength, multiplier, result);
     }
   };
 
-  const addSomeLettersToResult = (word, maxSequenceLength, multiplier, result) => {
+  const addCharactersToResult = (word, maxSequenceLength, multiplier, result) => {
     maxSequenceLength--;
     for (let i = maxSequenceLength, obj = {}; i < word.length - 1; i++) {
       const sequenceFromWord = DUMMY + word.slice(i - maxSequenceLength, i + 1);
