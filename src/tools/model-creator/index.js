@@ -52,14 +52,18 @@ const createModel = (args) => {
     }
   };
   const processOneWord = (word, multiplier, sequenceLength, result) => {
-    for (let maxSequenceLength = sequenceLength + 1, wl = word.length; maxSequenceLength--; ) {
+    for (let maxSequenceLength = 1, wl = word.length, n = sequenceLength; maxSequenceLength <= n; maxSequenceLength++) {
       if (wl > maxSequenceLength) addCharactersToResult(word, maxSequenceLength, multiplier, result);
     }
   };
 
   const addCharactersToResult = (word, maxSequenceLength, multiplier, result) => {
+    let obj = addCounterToResult(0, result);
+    obj = addSequenceToResult(DUMMY, obj);
+    addWeightsToResult(word[0], multiplier, obj);
+
     maxSequenceLength--;
-    for (let i = maxSequenceLength, obj = {}; i < word.length - 1; i++) {
+    for (let i = maxSequenceLength; i < word.length - 1; i++) {
       const sequenceFromWord = DUMMY + word.slice(i - maxSequenceLength, i + 1);
       const letterAfterSequence = word[i + 1];
       const counter = sequenceFromWord.length - DUMMY.length;
