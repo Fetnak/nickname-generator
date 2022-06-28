@@ -259,6 +259,7 @@ argv.command({
       describe: "Path to save file with nicknames",
       normalize: true,
       type: "string",
+      default: "./",
     },
   },
   handler(argv) {

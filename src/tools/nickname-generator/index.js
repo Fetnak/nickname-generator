@@ -1,22 +1,43 @@
 import fs from "fs";
 import path from "path";
+import dayjs from "dayjs";
 
 const generateNickname = (args) => {
   const start = (args) => {
+    switch (args.form) {
+      case "json":
+        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".json"), "");
+        break;
+      case "text":
+        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".text"), "");
+        break;
+    }
+
     const modelsInfo = JSON.parse(fs.readFileSync(path.join(args.input, "model-" + args.uuid + "-info.json")));
-    const modelsData = JSON.parse(fs.readFileSync(path.join(args.input, "model-" + args.uuid + "-data.json")));
-    maxSequenceLength = args.accuracy > 0 && args.accuracy < modelsInfo.maxSequenceLength ? args.accuracy : modelsInfo.maxSequenceLength;
+    const modelsData = JSON.parse(fs.readFileSync(path.join(args.input, "model-" + args.uuid + "-data.json")));  
 
     console.log(modelsInfo);
-    console.log("Selected maxSequenceLength: %s. Min: %s. Max: %s. Words generated: %s.", maxSequenceLength, args.minimum, args.maximum, args.count);
+    modelsInfo.maxSequenceLength = args.accuracy > 0 && args.accuracy < modelsInfo.maxSequenceLength ? args.accuracy : modelsInfo.maxSequenceLength;
 
-    let generatedWords = [];
+    const nicknames = generateNicknames(args.minimum, args.maximum, modelsData, modelsInfo, args.count);
 
-    for (let i = 0; i < args.count; i++) {
-      generatedWords.push(generateRandomNickname(args.minimum, args.maximum, modelsData, modelsInfo));
+    switch (args.form) {
+      case "console":
+        writeArray(nicknames, args.columns);
+        break;
+      case "json":
+        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".json"), JSON.stringify(nicknames));
+        break;
+      case "text":
+        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".text"), nicknames.toString.replace(/,/g, "\n"));
+        break;
     }
-    console.log();
-    writeArray(generatedWords, args.columns);
+  };
+
+  const generateNicknames = (min, max, weights, modelsInfo, count) => {
+    let nicknames = [];
+    for (let i = count; i--; ) nicknames.push(generateRandomNickname(min, max, weights, modelsInfo));
+    return nicknames;
   };
 
   const writeArray = (array, columns) => {
@@ -32,8 +53,6 @@ const generateNickname = (args) => {
       string = "";
     }
   };
-
-  let maxSequenceLength;
 
   const generateRandomNickname = (min, max, weights, modelsInfo) => {
     if (min < 1 || min > max) return "";
@@ -71,7 +90,7 @@ const generateNickname = (args) => {
     const nl = nickname.length;
     let preform = "";
     while (true) {
-      let randomNumber = random(1, maxSequenceLength);
+      let randomNumber = random(1, modelsInfo.maxSequenceLength);
       for (let i = randomNumber; i--; ) {
         preform = modelsInfo.dummy + nickname.slice(nl - i, nl);
         if (weights[i][preform]) {
