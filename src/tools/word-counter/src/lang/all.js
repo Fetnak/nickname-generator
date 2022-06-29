@@ -26,4 +26,21 @@ export default {
     lastLetter: "z",
     isLetterFunctionType: "loop",
   },
+  ita: {
+    language: "Italian",
+    firstLetter: "a",
+    lastLetter: "z",
+    isLetterFunctionType: "loop",
+  },
+  swe: {
+    language: "Sweden",
+    alphabet: "abcdefghijklmnopqrstuvwxyzåäö",
+    isLetterFunctionType: "regex",
+  },
+  fre: {
+    language: "French",
+    firstLetter: "a",
+    lastLetter: "z",
+    isLetterFunctionType: "loop",
+  },
 };

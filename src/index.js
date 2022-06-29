@@ -79,7 +79,7 @@ argv.command({
       alias: "l",
       describe: "Language of the text",
       type: "string",
-      choices: ["eng", "lat", "rus", "bel", "ukr"],
+      choices: ["eng", "lat", "rus", "bel", "ukr", "ita", "swe", "fre"],
       default: "eng",
     },
     sort: {
