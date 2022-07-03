@@ -1,13 +1,13 @@
 import fs from "fs";
-import util from "util";
 import path from "path";
 import dayjs from "dayjs";
 import * as uuid from "uuid";
+import sizeof from "object-sizeof";
 import { applyLanguage } from "./src/applyLanguage.js";
 import { initializeIsLetterFunc } from "./src/isLetter.js";
+import { log } from "../../functions/log.js";
 
-const countWords = (args) => {
-  const startExecution = Date.now();
+export const countWords = (args) => {
   const preparedUuid = uuid.validate(args.uuid) ? args.uuid : uuid.v4();
 
   let langParam, isLetter;
@@ -19,6 +19,7 @@ const countWords = (args) => {
     let wordsInfo = {
       uuid: preparedUuid,
       name: path.basename(args.input, ".txt"),
+      describtion: args.describtion,
       createdAt: undefined,
       alphabet: langParam.alphabet,
       sourceSize: fs.statSync(args.input).size.toString() + " bytes",
@@ -30,24 +31,31 @@ const countWords = (args) => {
     let wordsData = {};
 
     try {
-      args.outputFile = args.output + "/words-" + preparedUuid;
+      const wordsFolder = path.join(args.output, "words-" + preparedUuid);
 
       const textFileReadStream = fs.createReadStream(args.input, {
         highWaterMark: args.chunk,
       });
-      fs.promises.mkdir(args.output, { recursive: true }).catch(console.error);
-      fs.writeFileSync(args.outputFile + "-data.json", "");
-      fs.writeFileSync(args.outputFile + "-info.json", "");
+      fs.promises.mkdir(wordsFolder, { recursive: true }).catch(console.error);
 
       const startExecution = Date.now();
       let chunkCounter = 1;
       let chunksCount = Math.ceil(fs.statSync(args.input).size / args.chunk);
+      let wordsFileCounter = 0;
 
       textFileReadStream.on("data", (chunk) => {
-        console.log(util.format("Started Text Chunk: %s/%s. %s", chunkCounter, chunksCount, (Date.now() - startExecution).toString().padStart(8) + " ms"));
+        console.log(`Started Text Chunk: ${chunkCounter}/${chunksCount}.`);
 
         splitTextFileToWordsArray(chunk.toString("utf-8"), wordsData);
-
+        let wdl = Object.keys(wordsData).length;
+        const limitToFile = 3000000;
+        if (wdl >= limitToFile) {
+          fs.writeFileSync(path.join(wordsFolder, wordsFileCounter.toString().padStart(3, "0") + "-data.json"), JSON.stringify(wordsData));
+          wordsFileCounter++;
+          wordsData = {};
+          log(`${wdl} words was wrote on drive.`);
+        }
+        log(`Size of ${wdl} words is ${sizeof(wordsData)} bytes`);
         chunkCounter++;
       });
 
@@ -57,13 +65,40 @@ const countWords = (args) => {
         wordsInfo.createdAt = dayjs(Date.now()).format("YYYY-MM-DD HH-mm-ss");
         wordsInfo.toWordsProcessingTime = (Date.now() - startExecution).toString() + " ms";
 
-        fs.writeFileSync(args.outputFile + "-data.json", JSON.stringify(wordsData));
-        fs.writeFileSync(args.outputFile + "-info.json", JSON.stringify(wordsInfo));
-        console.log(wordsInfo)
+        fs.writeFileSync(path.join(wordsFolder, wordsFileCounter.toString().padStart(3, "0") + "-data.json"), JSON.stringify(wordsData));
+        wordsFileCounter++;
+        fs.writeFileSync(path.join(wordsFolder, "info.json"), JSON.stringify(wordsInfo));
+        console.log(wordsInfo);
+        log("Started clearing files.");
+        clearWordFiles(wordsFolder);
       });
     } catch (error) {
       console.log("Unable to create output file or read input file!");
       console.log(error);
+    }
+  };
+
+  const clearWordFiles = (wordsFolder) => {
+    const files = fs.readdirSync(wordsFolder).filter((filename) => filename.includes("data.json"));
+    for (let i = 0; i < files.length - 1; i++) {
+      const file1 = JSON.parse(fs.readFileSync(path.join(wordsFolder, files[i])));
+      log(`"${files[i]}" Loaded`);
+      const file1Array = Object.keys(file1);
+      log(`Array from "${files[i]}" file created`);
+      const file1ArrayLength = file1Array.length;
+      for (let j = i + 1; j < files.length; j++) {
+        const file2 = JSON.parse(fs.readFileSync(path.join(wordsFolder, files[j])));
+        for (let k = file1ArrayLength; k--; ) {
+          if (file2[file1Array[k]]) {
+            file1[file1Array[k]] += file2[file1Array[k]];
+            delete file2[file1Array[k]];
+          }
+        }
+        fs.writeFileSync(path.join(wordsFolder, files[j]), JSON.stringify(file2));
+        log(`[${files[i]}] Cleared "${files[j]}" was written`);
+      }
+      fs.writeFileSync(path.join(wordsFolder, files[i]), JSON.stringify(file1));
+      log(`Cleared "${files[i]}" was written`);
     }
   };
 
@@ -127,5 +162,3 @@ const countWords = (args) => {
 //     delete wordsObject[WORDS_FILTER[i]];
 //   }
 // };
-
-export default { countWords };

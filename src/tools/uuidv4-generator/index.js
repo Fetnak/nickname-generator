@@ -2,7 +2,7 @@ import fs from "fs";
 import dayjs from "dayjs";
 import { v4 as uuidv4 } from "uuid";
 
-const generateUUIDs = (args) => {
+export const generateUUIDs = (args) => {
   const start = (args) => {
     args.count = Math.max(1, args.count);
     const UUIDs = generate(args.count);
@@ -39,5 +39,3 @@ const generateUUIDs = (args) => {
 
   start(args);
 };
-
-export default { generateUUIDs };

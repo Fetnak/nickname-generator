@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import dayjs from "dayjs";
 
-const generateNickname = (args) => {
+export const generateNickname = (args) => {
   const start = (args) => {
     switch (args.form) {
       case "json":
@@ -106,5 +106,3 @@ const generateNickname = (args) => {
 
   start(args);
 };
-
-export default { generateNickname };

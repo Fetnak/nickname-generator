@@ -2,20 +2,22 @@ import fs from "fs";
 import path from "path";
 import dayjs from "dayjs";
 import * as uuid from "uuid";
+import { clearAndSortResult } from "./functions/clear-and-sort.js";
+import { processAllWordsFromText, writeToDriveAll } from "./functions/process-all-words-from-text.js";
 
-const createModel = (args) => {
+export const createModel = (args) => {
   const startExecution = Date.now();
-  const preparedUuid = uuid.validate(args.output_uuid) ? args.output_uuid : uuid.v4();
-
-  const wordsInfo = JSON.parse(fs.readFileSync(path.join(args.input, "words-" + args.input_uuid + "-info.json")));
-  const wordsData = JSON.parse(fs.readFileSync(path.join(args.input, "words-" + args.input_uuid + "-data.json")));
-
-  const DUMMY = "_";
+  const preparedUuid = uuid.validate(args.outputUuid) ? args.outputUuid : uuid.v4();
+  const wordsFolder = path.join(args.input, "words-" + args.inputUuid);
+  const wordsInfo = JSON.parse(fs.readFileSync(path.join(wordsFolder, "info.json")));
+  const modelFolder = path.join(args.output, "model-" + preparedUuid);
+  fs.promises.mkdir(modelFolder, { recursive: true }).catch(console.error);
 
   let modelInfo = {
     uuid: preparedUuid,
     uuidWords: wordsInfo.uuid,
     name: wordsInfo.name,
+    description: wordsInfo.description,
     createdAt: undefined,
     alphabet: wordsInfo.alphabet,
     maxSequenceLength: 0,
@@ -24,74 +26,26 @@ const createModel = (args) => {
     toModelProcessingTime: undefined,
     language: wordsInfo.language,
     version: process.env.npm_package_version,
-    dummy: DUMMY,
+    dummy: "_",
   };
 
   let modelData = {};
 
   const start = (args) => {
-    fs.promises.mkdir(args.output, { recursive: true }).catch(console.error);
-    fs.writeFileSync(path.join(args.output, "model-" + preparedUuid + "-info.json"), "");
-    fs.writeFileSync(path.join(args.output, "model-" + preparedUuid + "-data.json"), "");
+    const files = fs.readdirSync(wordsFolder).filter((filename) => filename.includes("data.json"));
+    for (let i = 0; i < files.length; i++) {
+      processAllWordsFromText(modelData, modelInfo, JSON.parse(fs.readFileSync(path.join(wordsFolder, files[i]))), modelFolder, args, i + 1, files.length);
+    }
 
-    processAllWordsFromText(modelData, args.sequence, wordsData);
+    writeToDriveAll(0, modelData, modelFolder);
+    clearAndSortResult(modelFolder, args.fileLimit);
 
     modelInfo.createdAt = dayjs(Date.now()).format("YYYY-MM-DD HH-mm-ss");
-    modelInfo.maxSequenceLength = maxSequenceLengthMeasurer;
     modelInfo.toModelProcessingTime = (Date.now() - startExecution).toString() + " ms";
 
-    fs.writeFileSync(path.join(args.output, "model-" + preparedUuid + "-info.json"), JSON.stringify(modelInfo));
-    fs.writeFileSync(path.join(args.output, "model-" + preparedUuid + "-data.json"), JSON.stringify(modelData));
+    fs.writeFileSync(path.join(modelFolder, "info.json"), JSON.stringify(modelInfo));
     console.log(modelInfo);
-  };
-
-  const processAllWordsFromText = (result, sequenceLength, wordsData) => {
-    const words = Object.keys(wordsData);
-    for (let i = words.length; i--; ) {
-      processOneWord(words[i], wordsData[words[i]], sequenceLength, result);
-    }
-  };
-  const processOneWord = (word, multiplier, sequenceLength, result) => {
-    for (let maxSequenceLength = 1, wl = word.length, n = sequenceLength; maxSequenceLength <= n; maxSequenceLength++) {
-      if (wl > maxSequenceLength) addCharactersToResult(word, maxSequenceLength, multiplier, result);
-    }
-  };
-
-  const addCharactersToResult = (word, maxSequenceLength, multiplier, result) => {
-    let obj = addCounterToResult(0, result);
-    obj = addSequenceToResult(DUMMY, obj);
-    addWeightsToResult(word[0], multiplier, obj);
-
-    maxSequenceLength--;
-    for (let i = maxSequenceLength; i < word.length - 1; i++) {
-      const sequenceFromWord = DUMMY + word.slice(i - maxSequenceLength, i + 1);
-      const letterAfterSequence = word[i + 1];
-      const counter = sequenceFromWord.length - DUMMY.length;
-      obj = addCounterToResult(counter, result);
-      obj = addSequenceToResult(sequenceFromWord, obj);
-      addWeightsToResult(letterAfterSequence, multiplier, obj);
-    }
-  };
-
-  let maxSequenceLengthMeasurer = 0;
-
-  const addCounterToResult = (counter, result) => {
-    if (counter > maxSequenceLengthMeasurer) maxSequenceLengthMeasurer = counter;
-    if (!result[counter]) result[counter] = {};
-    return result[counter];
-  };
-
-  const addSequenceToResult = (sequence, result) => {
-    if (!result[sequence]) result[sequence] = {};
-    return result[sequence];
-  };
-
-  const addWeightsToResult = (weights, multiplier, result) => {
-    if (result[weights]) result[weights] += multiplier;
-    else result[weights] = multiplier;
   };
 
   start(args);
 };
-
-export default { createModel };
