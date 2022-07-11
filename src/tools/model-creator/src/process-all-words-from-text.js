@@ -11,25 +11,49 @@ export const processAllWordsFromText = (result, modelInfo, wordsData, modelFolde
   const words = Object.keys(wordsData);
   const wl = words.length;
   const forLog = Math.floor(wl / args.checkStep) * args.checkStep;
-  for (let i = wl, fullSize; i--; ) {
+  let tempForLog = 0;
+  let biggestCounter;
+  for (let i = wl; i--; ) {
     processOneWord(words[i], wordsData[words[i]], args.sequence, modelInfo, result);
     if (i % args.checkStep == 0) {
-      fullSize = sizeof(result);
-      log(`Model from ${Math.abs(i - forLog)}/${wl} words from ${currentFile}/${filesCount} file is ${fullSize} bytes.`);
-      checkSizes(args, fullSize, result, modelFolder);
+      tempForLog = Math.abs(i - forLog);
+      if (biggestCounter === undefined && tempForLog !== 0) biggestCounter = checkBiggestCounterSize(result, biggestCounter);
+      else biggestCounter = checkSizes(args, result, modelFolder, biggestCounter);
+      log(`Processed ${tempForLog}/${wl} words from ${currentFile}/${filesCount} file.`);
     }
   }
 };
 
-const checkSizes = (args, fullSize, obj, modelFolder) => {
-  if (fullSize <= args.fullLimit) {
-    const counters = Object.keys(obj);
-    counters.forEach((counter) => {
-      if (sizeof(obj[counter]) > args.tempFileLimit) {
-        writeToDrive(obj, counter, modelFolder);
+const checkBiggestCounterSize = (obj, biggestCounter) => {
+  if (biggestCounter === undefined) {
+    let tempSize = 0;
+    let biggestSize = 0;
+    Object.keys(obj).forEach((counter) => {
+      tempSize = sizeof(obj[counter]);
+      if (tempSize > biggestSize) {
+        biggestSize = tempSize;
+        biggestCounter = counter;
       }
     });
-  } else writeToDriveAll(1, obj, modelFolder);
+  }
+  return biggestCounter;
+};
+
+const checkSizes = (args, obj, modelFolder, biggestCounter) => {
+  if (sizeof(obj[biggestCounter]) >= args.tempFileLimit) {
+    let tempSize,
+      biggestSize = 0;
+    Object.keys(obj).forEach((counter) => {
+      tempSize = sizeof(obj[counter]);
+      if (tempSize > biggestSize) {
+        biggestSize = tempSize;
+        biggestCounter = counter;
+      }
+      if (tempSize > args.tempFileLimit) writeToDrive(obj, counter, modelFolder);
+    });
+  }
+  global.gc();
+  return biggestCounter;
 };
 
 let modelFileCounter = {};
@@ -43,7 +67,7 @@ export const writeToDriveAll = (from, obj, modelFolder) => {
 
 const writeToDrive = (obj, counter, modelFolder) => {
   fs.promises.mkdir(path.join(modelFolder, counter.toString()), { recursive: true }).catch(console.error);
-  if (modelFileCounter[counter] == undefined) {
+  if (modelFileCounter[counter] === undefined) {
     modelFileCounter[counter] = 0;
   } else {
     modelFileCounter[counter]++;

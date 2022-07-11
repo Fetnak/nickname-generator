@@ -6,7 +6,7 @@ export const displayWordsInfo = (dirPath) => {
   files.forEach((file) => {
     try {
       const info = JSON.parse(fs.readFileSync(path.join(dirPath, file, "info.json")));
-      let message = `UUID: ${info.uuid}. Name: ${info.name}. Created: ${info.createdAt}.`;
+      let message = `UUID: ${info.uuid}. Name: ${info.name}. Created: ${info.createdAt}. Source size: ${info.sourceSize}.`;
       console.log(message);
     } catch (error) {}
   });

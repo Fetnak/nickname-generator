@@ -155,12 +155,12 @@ argv.command({
     tempFileLimit: {
       describe: "Limit for temporary weight files (in MB)",
       type: "number",
-      default: 2,
+      default: 8,
     },
     fileLimit: {
       describe: "Limit for output weight files (in MB)",
       type: "number",
-      default: 1,
+      default: 8,
     },
     fullLimit: {
       describe: "Limit for full model data in RAM (in MB)",
@@ -288,6 +288,11 @@ argv.command({
       type: "string",
       default: "./",
     },
+    cacheSize: {
+      describe: "Size of cache of weights",
+      type: "string",
+      default: 128,
+    },
     list: {
       alias: "l",
       describe: "Display all available files from word counter tool",
@@ -303,6 +308,7 @@ argv.command({
       console.log("Option --uuid is empty!");
       process.exit();
     }
+    argv.cacheSize *= 1024 * 1024;
     generateNickname(argv);
   },
 });

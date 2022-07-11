@@ -1,107 +1,227 @@
 import fs from "fs";
 import path from "path";
 import dayjs from "dayjs";
+import sizeof from "object-sizeof";
+import { log } from "../../functions/log.js";
 
 export const generateNickname = (args) => {
   const start = (args) => {
+    log("Start.");
+    const foldersPath = path.join(args.input, "model-" + args.uuid);
     switch (args.form) {
       case "json":
         fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".json"), "");
         break;
       case "text":
-        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".text"), "");
+        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".txt"), "");
         break;
     }
 
-    const modelsInfo = JSON.parse(fs.readFileSync(path.join(args.input, "model-" + args.uuid + "-info.json")));
-    const modelsData = JSON.parse(fs.readFileSync(path.join(args.input, "model-" + args.uuid + "-data.json")));  
+    const modelInfo = JSON.parse(fs.readFileSync(path.join(foldersPath, "info.json")));
 
-    console.log(modelsInfo);
-    modelsInfo.maxSequenceLength = args.accuracy > 0 && args.accuracy < modelsInfo.maxSequenceLength ? args.accuracy : modelsInfo.maxSequenceLength;
+    console.log(modelInfo);
+    modelInfo.maxSequenceLength = args.accuracy > 0 && args.accuracy < modelInfo.maxSequenceLength ? args.accuracy : modelInfo.maxSequenceLength;
 
-    const nicknames = generateNicknames(args.minimum, args.maximum, modelsData, modelsInfo, args.count);
+    const preNicknames = initializeArray(args.minimum, args.maximum, args.count);
+    const nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args);
+
+    shuffleArray(nicknames);
 
     switch (args.form) {
       case "console":
-        writeArray(nicknames, args.columns);
+        outputArrayAsTable(nicknames, args.columns);
         break;
       case "json":
         fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".json"), JSON.stringify(nicknames));
         break;
       case "text":
-        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".text"), nicknames.toString.replace(/,/g, "\n"));
+        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".txt"), nicknames.toString().replace(/,/g, "\n"));
         break;
     }
   };
 
-  const generateNicknames = (min, max, weights, modelsInfo, count) => {
+  const initializeArray = (min, max, count) => {
+    let preNicknames = [];
+    for (let i = count; i--; )
+      preNicknames.push({
+        name: "",
+        sequence: 0,
+        width: random(min, max),
+      });
+    return preNicknames;
+  };
+
+  const generateNicknames = (preNicknames, foldersPath, modelInfo, args) => {
     let nicknames = [];
-    for (let i = count; i--; ) nicknames.push(generateRandomNickname(min, max, weights, modelsInfo));
+    let pointers = {};
+    let weights = {
+      info: [],
+    };
+    const folders = fs.readdirSync(foldersPath).filter((name) => name !== "info.json");
+    const padStartNumber = folders[0].length;
+    for (let i = 0; i <= modelInfo.maxSequenceLength; i++) pointers[folders[i]] = JSON.parse(fs.readFileSync(path.join(foldersPath, folders[i], "pointers.json")));
+    let preNicknameToFind = preNicknames[0];
+    while (preNicknames.length > 0) {
+      log(`Progress ${getProgress(nicknames, preNicknames)}%`);
+
+      preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind);
+
+      loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
+
+      for (let i = 0; i < preNicknames.length; i++) {
+        addCharacterIfAvailable(preNicknames[i], weights, modelInfo);
+        if (preNicknames[i].name.length == preNicknames[i].width) {
+          nicknames.push(preNicknames[i].name);
+          deleteElementFromArray(preNicknames, i);
+          i--;
+        }
+      }
+
+      deleteOldestWeights(weights, args.cacheSize);
+    }
     return nicknames;
   };
 
-  const writeArray = (array, columns) => {
+  const getProgress = (nicknames, preNicknames) => {
+    let progress = 0;
+    preNicknames.forEach((nickname) => {
+      progress += nickname.name.length / nickname.width;
+    });
+    progress += nicknames.length;
+    return Math.round((progress / (preNicknames.length + nicknames.length)) * 10000) / 100;
+  };
+
+  const choosePreNickname = (preNicknames, choosenPreNickname) => {
+    const sequenceToFind = choosenPreNickname.sequence;
+    const filteredPreNicknames = preNicknames.filter((a) => a.sequence <= sequenceToFind);
+    if (filteredPreNicknames.length === 0) return preNicknames.sort((a, b) => b.sequence - a.sequence)[0];
+    else return filteredPreNicknames.sort((a, b) => b.sequence - a.sequence)[0];
+  };
+
+  const addCharacterIfAvailable = (preNickname, weights, modelInfo) => {
+    const strToCompare = modelInfo.dummy + preNickname.name.slice(-preNickname.sequence);
+    for (let i = 0; i < weights.info.length; i++)
+      if (strToCompare.localeCompare(weights.info[i].from) >= 0 && strToCompare.localeCompare(weights.info[i].to) === -1 && strToCompare.length === weights.info[i].from.length) {
+        const foundedWeights = weights[preNickname.sequence][weights.info[i].from][strToCompare];
+        const foundedWeightsInfo = weights.info[i];
+        if (foundedWeights !== undefined) addAvailableCharacter(preNickname, foundedWeights, foundedWeightsInfo, modelInfo);
+        else preNickname.sequence = preNickname.sequence - 1;
+        break;
+      }
+  };
+
+  const addAvailableCharacter = (preNickname, weights, weightsInfo, modelInfo) => {
+    let weightsCounter = 0;
+    const words = Object.keys(weights);
+    for (let i = words.length; i--; ) weightsCounter += weights[words[i]];
+
+    const randomNumber = random(1, weightsCounter);
+    weightsCounter = 0;
+
+    let nextChar;
+    for (let i = words.length; i--; ) {
+      if (randomNumber > weightsCounter && randomNumber <= weightsCounter + weights[words[i]]) {
+        nextChar = words[i];
+        break;
+      }
+      weightsCounter += weights[words[i]];
+    }
+    preNickname.name += nextChar;
+    preNickname.sequence = Math.min(random(1, modelInfo.maxSequenceLength), preNickname.name.length);
+    weightsInfo.lastUsed = Date.now();
+  };
+
+  const loadWeights = (weights, pointers, padStartNumber, foldersPath, modelInfo, preNickname) => {
+    if (checkIfWeightsAdded(weights, preNickname, modelInfo)) return;
+
+    const strToFind = modelInfo.dummy + preNickname.name.slice(-preNickname.sequence);
+    const paddedSequence = preNickname.sequence.toString().padStart(padStartNumber, "0");
+    const pointersForSequence = pointers[paddedSequence];
+    const sequenceWeightsPath = path.join(foldersPath, paddedSequence);
+    const weigthsFileNames = fs.readdirSync(sequenceWeightsPath).filter((name) => name !== "pointers.json");
+
+    if (!weights[preNickname.sequence]) weights[preNickname.sequence] = {};
+
+    for (let i = 0; i < pointersForSequence.length - 1; i++)
+      if (strToFind.localeCompare(pointersForSequence[i]) >= 0 && strToFind.localeCompare(pointersForSequence[i + 1]) === -1) {
+        const tempWeight = JSON.parse(fs.readFileSync(path.join(sequenceWeightsPath, weigthsFileNames[i])));
+        weights[preNickname.sequence][pointersForSequence[i]] = tempWeight;
+        weights.info.push({
+          sequence: preNickname.sequence,
+          from: pointersForSequence[i],
+          to: pointersForSequence[i + 1],
+          lastUsed: Date.now(),
+          size: sizeof(tempWeight),
+        });
+        break;
+      }
+  };
+
+  const checkIfWeightsAdded = (weights, preNickname, modelInfo) => {
+    const strToFind = modelInfo.dummy + preNickname.name.slice(-preNickname.sequence);
+    for (let i = 0; i < weights.info.length; i++) {
+      if (strToFind.localeCompare(weights.info[i].from) >= 0 && strToFind.localeCompare(weights.info[i].to) === -1 && strToFind.length === weights.info[i].from.length) return true;
+    }
+    return false;
+  };
+
+  const deleteOldestWeights = (weights, cacheSize) => {
+    const deleteSmth = (oldestWeight) => {
+      delete weights[oldestWeight.sequence][oldestWeight.from];
+      weights.info.splice(oldestWeight.index, 1);
+    };
+
+    let computedWeight = 0;
+    weights.info.forEach((info) => (computedWeight += info.size));
+    while (computedWeight > cacheSize) {
+      let oldestWeight = weights.info[0];
+      oldestWeight.index = 0;
+      for (let i = 1; i < weights.info.length; i++) {
+        if (oldestWeight.lastUsed > weights.info[i].lastUsed) {
+          oldestWeight = weights.info[i];
+          oldestWeight.index = i;
+        }
+      }
+      deleteSmth(oldestWeight);
+      computedWeight = 0;
+      weights.info.forEach((info) => (computedWeight += info.size));
+      global.gc();
+    }
+  };
+
+  const deleteElementFromArray = (array, index) => {
+    array.splice(index, 1);
+  };
+
+  const outputArrayAsTable = (array, columns) => {
     let string = "";
     let padding = args.maximum + 2;
     let columnCount = columns + 1;
     for (let i = 0, n = Math.ceil(array.length / columnCount); i <= n; i++) {
       for (let j = 0, word; j < columns; j++) {
         word = array[j + i * columns];
-        if (word != undefined) string += word.padEnd(padding);
+        if (word) string += word.padEnd(padding);
       }
       console.log(string);
       string = "";
     }
   };
 
-  const generateRandomNickname = (min, max, weights, modelsInfo) => {
-    if (min < 1 || min > max) return "";
-    let nickname = "";
-    const wordLength = random(min, max);
-    for (let i = wordLength; i--; ) {
-      if (nickname.length <= wordLength) {
-        nickname += generateNextLetter(nickname, weights, modelsInfo);
-      }
-    }
-    return nickname;
-  };
-
-  const generateNextLetter = (nickname, weights, modelsInfo) => {
-    let weightsCounter = 0;
-    const weightsForNickname = selectWeightsforNickname(nickname, weights, modelsInfo);
-    const words = Object.keys(weightsForNickname);
-    for (let i = words.length; i--; ) {
-      weightsCounter += weightsForNickname[words[i]];
-    }
-
-    const randomNumber = random(1, weightsCounter);
-    weightsCounter = 0;
-
-    for (let i = words.length; i--; ) {
-      if (randomNumber > weightsCounter && randomNumber <= weightsCounter + weightsForNickname[words[i]]) {
-        return words[i];
-      }
-
-      weightsCounter += weightsForNickname[words[i]];
-    }
-  };
-
-  const selectWeightsforNickname = (nickname, weights, modelsInfo) => {
-    const nl = nickname.length;
-    let preform = "";
-    while (true) {
-      let randomNumber = random(1, modelsInfo.maxSequenceLength);
-      for (let i = randomNumber; i--; ) {
-        preform = modelsInfo.dummy + nickname.slice(nl - i, nl);
-        if (weights[i][preform]) {
-          return weights[i][preform];
-        }
-      }
-    }
-  };
-
   const random = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1) + min);
+  };
+
+  const shuffleArray = (array) => {
+    let currentIndex = array.length,
+      randomIndex;
+    while (currentIndex != 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+
+    return array;
   };
 
   start(args);

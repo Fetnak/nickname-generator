@@ -1,6 +1,7 @@
 # I am too lazy to come up with a description
 resources/
 versions/
+test.mjs
 
 # Logs
 logs

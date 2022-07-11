@@ -4,7 +4,7 @@ import sizeof from "object-sizeof";
 import { log } from "../../../functions/log.js";
 import { filterFilesByString } from "../../../functions/read-dir.js";
 
-export const clearAndSortResult = (foldersPath, fileLimit) => {
+export const clearAndSortResult = (foldersPath, modelInfo, fileLimit) => {
   const folderCounters = fs.readdirSync(foldersPath).filter((filename) => filename !== "info.json");
   for (let folder = 0; folder < folderCounters.length; folder++) {
     const folderPath = path.join(foldersPath, folderCounters[folder]);
@@ -18,7 +18,7 @@ export const clearAndSortResult = (foldersPath, fileLimit) => {
       sortFile(path.join(folderPath, files[0]));
       log(`"${folderCounters[folder]} sequence" processed.`);
     }
-    filePointersToInfo(folderPath);
+    filePointersToInfo(folderPath, modelInfo);
     log(`"${folderCounters[folder]} sequence" pointers  done.`);
   }
 };
@@ -35,29 +35,24 @@ const sortFile = (filePath) => {
 
 const processOneFolderCounter = (folderPath, fileLimit) => {
   let files = filterFilesByString(folderPath, "data.json");
-  for (let i = 0; i < files.length; i++) {
+  for (let i = 0; i < files.length - 1; i++) {
     let file1 = JSON.parse(fs.readFileSync(path.join(folderPath, files[i])));
-
-    if (JSON.stringify(file1) === "{}") {
-      fs.unlinkSync(path.join(folderPath, files[i]));
-      files = filterFilesByString(folderPath, "data.json");
-      i--;
-      continue;
-    }
-    if (i === files.length - 1) break;
     const file1Array = Object.keys(file1);
     for (let j = i + 1; j < files.length; j++) {
       const file2 = JSON.parse(fs.readFileSync(path.join(folderPath, files[j])));
-      if (JSON.stringify(file2) === "{}") continue;
       for (let k = file1Array.length; k--; ) joinSequences(file1, file2, file1Array[k]);
 
       let tempFile1 = {};
       let tempFile2 = {};
       sortPairOfFiles(tempFile1, tempFile2, file1, file2, fileLimit);
       file1 = tempFile1;
-      fs.writeFileSync(path.join(folderPath, files[j]), JSON.stringify(tempFile2));
+      if (Object.keys(tempFile2).length === 0) {
+        fs.unlinkSync(path.join(folderPath, files[j--]));
+        files = filterFilesByString(folderPath, "data.json");
+      } else fs.writeFileSync(path.join(folderPath, files[j]), JSON.stringify(tempFile2));
     }
     fs.writeFileSync(path.join(folderPath, files[i]), JSON.stringify(file1));
+    global.gc();
   }
 };
 
@@ -98,12 +93,12 @@ const addSequence = (tempFile, file1, file2, sequence, sizeOfTempFile) => {
   let obj = file1[sequence];
   if (obj != undefined) {
     tempFile[sequence] = obj;
-    sizeOfTempFile += sizeof(sequence) + sizeof(obj);
-    return sizeOfTempFile;
   } else {
     obj = file2[sequence];
     tempFile[sequence] = obj;
   }
+  sizeOfTempFile += sizeof(sequence) + sizeof(obj);
+  return sizeOfTempFile;
 };
 
 const renameAndSeparate = (folderPath, fileLimit) => {
@@ -116,7 +111,9 @@ const renameAndSeparate = (folderPath, fileLimit) => {
   files = filterFilesByString(folderPath, "data.json");
   let file = JSON.parse(fs.readFileSync(path.join(folderPath, files[files.length - 1])));
 
-  if (sizeof(file) > fileLimit) {
+  let fullFileSize = sizeof(file);
+
+  if (fullFileSize > fileLimit) {
     counter--;
     while (true) {
       let tempFile1 = {};
@@ -129,14 +126,17 @@ const renameAndSeparate = (folderPath, fileLimit) => {
         if (isNotFull) {
           tempFile1[fileArray[i]] = obj;
           sizeOfTempFile += sizeof(fileArray[i]) + sizeof(obj);
-          if (sizeOfTempFile > fileLimit) isNotFull = false;
+          if (sizeOfTempFile > fileLimit) {
+            isNotFull = false;
+            fullFileSize -= sizeOfTempFile;
+          }
         } else {
           tempFile2[fileArray[i]] = obj;
         }
       }
       fs.writeFileSync(path.join(folderPath, counter.toString().padStart(6, "0") + "-data.json"), JSON.stringify(tempFile1));
       counter++;
-      if (sizeof(tempFile2) > fileLimit) {
+      if (fullFileSize > fileLimit) {
         file = tempFile2;
       } else {
         fs.writeFileSync(path.join(folderPath, counter.toString().padStart(6, "0") + "-data.json"), JSON.stringify(tempFile2));
@@ -146,12 +146,40 @@ const renameAndSeparate = (folderPath, fileLimit) => {
   }
 };
 
-const filePointersToInfo = (folderPath) => {
+const filePointersToInfo = (folderPath, modelInfo) => {
   let pointers = [];
-  let files = filterFilesByString(folderPath, "data.json");
-  for (let i = 0; i < files.length; i++) {
-    let file = JSON.parse(fs.readFileSync(path.join(folderPath, files[i])));
-    pointers.push(({}[files[i]] = Object.keys(file)[0]));
+  let sequenceLength = 0;
+  let filenames = filterFilesByString(folderPath, "data.json");
+  for (let i = 0; i < filenames.length; i++) {
+    let file = JSON.parse(fs.readFileSync(path.join(folderPath, filenames[i])));
+    const firstSequence = Object.keys(file)[0];
+    pointers.push(({}[filenames[i]] = firstSequence));
+    sequenceLength = firstSequence.length - 1;
   }
+
+  const lastFileIndex = filenames.length - 1;
+  pointers.push(({}[filenames[lastFileIndex]] = getLastPointer(modelInfo, sequenceLength)));
+
   fs.writeFileSync(path.join(folderPath, "pointers.json"), JSON.stringify(pointers));
+};
+
+const getLastPointer = (modelInfo, sequence) => {
+  const getLastLetter = (alphabet) => alphabet.split("").sort((a, b) => b.localeCompare(a))[0];
+
+  const theBiggestLetter = (alphabet, letter) => {
+    for (let i = 0; i < alphabet.length; i++) {
+      const preparedWord = dummy + getLastLetter(modelInfo.alphabet).repeat(Math.max(0, sequence - 1)) + alphabet[i];
+      if (preparedWord.localeCompare(letter) !== -1) return false;
+    }
+    return true;
+  };
+  const nextLastChar = (char) => char.substring(0, char.length - 1) + String.fromCharCode(char.charCodeAt(char.length - 1) + 1);
+
+  let dummy = sequence > 0 ? modelInfo.dummy : "";
+
+  let letter = nextLastChar(dummy + getLastLetter(modelInfo.alphabet).repeat(sequence));
+  while (!theBiggestLetter(modelInfo.alphabet, letter)) {
+    letter = nextLastChar(letter);
+  }
+  return letter;
 };
