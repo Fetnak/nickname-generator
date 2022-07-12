@@ -13,8 +13,10 @@ export const processAllWordsFromText = (result, modelInfo, wordsData, modelFolde
   const forLog = Math.floor(wl / args.checkStep) * args.checkStep;
   let tempForLog = 0;
   let biggestCounter;
-  for (let i = wl; i--; ) {
-    processOneWord(words[i], wordsData[words[i]], args.sequence, modelInfo, result);
+  for (let i = wl, word; i--; ) {
+    if (args.calculateEnding) word = words[i] + DUMMY;
+    else word = words[i];
+    if (words[i].length >= args.lengthOfProcessedWord) processOneWord(word, wordsData[words[i]], args.sequence, modelInfo, result);
     if (i % args.checkStep == 0) {
       tempForLog = Math.abs(i - forLog);
       if (biggestCounter === undefined && tempForLog !== 0) biggestCounter = checkBiggestCounterSize(result, biggestCounter);

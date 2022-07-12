@@ -7,7 +7,7 @@ import { log } from "../../functions/log.js";
 export const generateNickname = (args) => {
   const start = (args) => {
     log("Start.");
-    const foldersPath = path.join(args.input, "model-" + args.uuid);
+
     switch (args.form) {
       case "json":
         fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".json"), "");
@@ -17,14 +17,13 @@ export const generateNickname = (args) => {
         break;
     }
 
+    const foldersPath = path.join(args.input, "model-" + args.uuid);
     const modelInfo = JSON.parse(fs.readFileSync(path.join(foldersPath, "info.json")));
+    console.log(modelInfo);
 
     args.start = checkStart(args.start, modelInfo.alphabet);
-    //args.minimum = Math.max(args.minimum, args.start.length + 1);
     args.minimum = args.start.length + args.minimum;
     args.maximum = args.start.length + args.maximum;
-
-    console.log(modelInfo);
     const maxSequenceLength = fs.readdirSync(foldersPath).filter((name) => name !== "info.json").length - 1;
     modelInfo.maxSequenceLength = args.accuracy > 0 && args.accuracy < maxSequenceLength ? args.accuracy : maxSequenceLength;
     const preNicknames = initializeArray(args.minimum, args.maximum, args.count, args.start, modelInfo);
@@ -52,8 +51,8 @@ export const generateNickname = (args) => {
     return name;
   };
 
-  const initializeArray = (min, max, count, start, modelInfo) => {
-    let preNicknames = [];
+  const initializeArray = (min, max, count, start, modelInfo, donePreNicknames) => {
+    let preNicknames = donePreNicknames || [];
     for (let i = count; i--; )
       preNicknames.push({
         name: start,
@@ -80,8 +79,20 @@ export const generateNickname = (args) => {
 
       loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
 
-      for (let i = 0; i < preNicknames.length; i++) {
+      for (let i = 0, tempNickname; i < preNicknames.length; i++) {
         addCharacterIfAvailable(preNicknames[i], weights, modelInfo);
+        if (preNicknames[i].name.slice(-1) == modelInfo.dummy) {
+          tempNickname = preNicknames[i].name.substring(0, preNicknames[i].name.length - modelInfo.dummy.length);
+          if (tempNickname.length >= args.minimum) {
+            nicknames.push(tempNickname);
+            deleteElementFromArray(preNicknames, i);
+            i--;
+          } else {
+            deleteElementFromArray(preNicknames, i);
+            initializeArray(args.minimum, args.maximum, 1, args.start, modelInfo, preNicknames);
+          }
+          continue;
+        }
         if (preNicknames[i].name.length == preNicknames[i].width) {
           nicknames.push(preNicknames[i].name);
           deleteElementFromArray(preNicknames, i);

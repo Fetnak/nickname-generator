@@ -31,7 +31,7 @@ export const createModel = (args) => {
 
   let modelData = {};
 
-  const wordsToFilter = ["amp", "quot", "apos", "lt", "gt"];
+  const wordsToFilter = ["amp", "quot", "apos", "lt", "gt", "www", "http", "https"];
 
   const start = (args) => {
     const files = fs.readdirSync(wordsFolder).filter((filename) => filename.includes("data.json"));

@@ -167,6 +167,18 @@ argv.command({
       type: "number",
       default: 10000,
     },
+    lengthOfProcessedWord: {
+      alias: "lpw",
+      describe: "Minimum length of the word to be used to create the model",
+      type: "number",
+      default: 2,
+    },
+    calculateEnding: {
+      alias: "calcEnd",
+      description: "Calculate the chance of ending a word",
+      type: "boolean",
+      default: true,
+    },
   },
   handler(argv) {
     if (argv.list) {
