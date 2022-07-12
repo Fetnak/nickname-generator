@@ -19,10 +19,15 @@ export const generateNickname = (args) => {
 
     const modelInfo = JSON.parse(fs.readFileSync(path.join(foldersPath, "info.json")));
 
-    console.log(modelInfo);
-    modelInfo.maxSequenceLength = args.accuracy > 0 && args.accuracy < modelInfo.maxSequenceLength ? args.accuracy : modelInfo.maxSequenceLength;
+    args.start = checkStart(args.start, modelInfo.alphabet);
+    //args.minimum = Math.max(args.minimum, args.start.length + 1);
+    args.minimum = args.start.length + args.minimum;
+    args.maximum = args.start.length + args.maximum;
 
-    const preNicknames = initializeArray(args.minimum, args.maximum, args.count);
+    console.log(modelInfo);
+    const maxSequenceLength = fs.readdirSync(foldersPath).filter((name) => name !== "info.json").length - 1;
+    modelInfo.maxSequenceLength = args.accuracy > 0 && args.accuracy < maxSequenceLength ? args.accuracy : maxSequenceLength;
+    const preNicknames = initializeArray(args.minimum, args.maximum, args.count, args.start, modelInfo);
     const nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args);
 
     shuffleArray(nicknames);
@@ -40,12 +45,19 @@ export const generateNickname = (args) => {
     }
   };
 
-  const initializeArray = (min, max, count) => {
+  const checkStart = (start, alphabet) => {
+    const regex = new RegExp("[" + alphabet + "]");
+    let name = "";
+    for (let i = 0; i < start.length; i++) if (start[i].match(regex)) name += start[i];
+    return name;
+  };
+
+  const initializeArray = (min, max, count, start, modelInfo) => {
     let preNicknames = [];
     for (let i = count; i--; )
       preNicknames.push({
-        name: "",
-        sequence: 0,
+        name: start,
+        sequence: Math.min(random(1, modelInfo.maxSequenceLength), start.length),
         width: random(min, max),
       });
     return preNicknames;

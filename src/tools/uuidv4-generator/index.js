@@ -14,7 +14,6 @@ export const generateUUIDs = (args) => {
         fs.promises.mkdir(args.output.replace("/<filename>", ""), { recursive: true }).catch(console.error);
         args.output = args.output.replace("<filename>", currentDateTime());
       }
-      //args.output += args.form === "json" ? ".json" : ".txt";
       if (args.form === "json") {
         console.log("penis");
         fs.writeFileSync(args.output, JSON.stringify(UUIDs));

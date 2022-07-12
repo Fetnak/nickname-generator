@@ -162,11 +162,6 @@ argv.command({
       type: "number",
       default: 8,
     },
-    fullLimit: {
-      describe: "Limit for full model data in RAM (in MB)",
-      type: "number",
-      default: 256,
-    },
     checkStep: {
       describe: "Step for check size of model data in RAM and logging",
       type: "number",
@@ -184,7 +179,6 @@ argv.command({
     }
     argv.tempFileLimit *= 1024 * 1024;
     argv.fileLimit *= 1024 * 1024;
-    argv.fullLimit *= 1024 * 1024;
     createModel(argv);
   },
 });
@@ -298,6 +292,12 @@ argv.command({
       describe: "Display all available files from word counter tool",
       type: "boolean",
     },
+    start: {
+      alias: "s",
+      describe: "First part of nickname",
+      type: "string",
+      default: "",
+    },
   },
   handler(argv) {
     if (argv.list) {
@@ -309,6 +309,7 @@ argv.command({
       process.exit();
     }
     argv.cacheSize *= 1024 * 1024;
+    argv.start = argv.start.toLowerCase();
     generateNickname(argv);
   },
 });

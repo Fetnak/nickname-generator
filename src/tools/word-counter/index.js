@@ -140,25 +140,3 @@ export const countWords = (args) => {
 
   start(args);
 };
-
-// const postProcessWords = (data, options) => {
-
-//   const changeLetterToAnother = (wordsObject, letterArray) => {
-
-//   }
-
-//   const canNotBeFirstWords = (wordsObject, charArray) => {
-
-//   }
-//   const deleteWords = (wordsObject, wordsToFilter) => {
-//     for (let i = wordsToFilter.length; i--;) {
-//       delete wordsObject[wordsToFilter[i]];
-//     }
-//   };
-// }
-
-// const deleteFilteredWords = (wordsObject) => {
-//   for (let i = WORDS_FILTER.length; i--;) {
-//     delete wordsObject[WORDS_FILTER[i]];
-//   }
-// };
