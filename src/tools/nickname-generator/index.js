@@ -27,7 +27,7 @@ export const generateNickname = (args) => {
     const maxSequenceLength = fs.readdirSync(foldersPath).filter((name) => name !== "info.json").length - 1;
     modelInfo.maxSequenceLength = args.accuracy > 0 && args.accuracy < maxSequenceLength ? args.accuracy : maxSequenceLength;
     const preNicknames = initializeArray(args.minimum, args.maximum, args.count, args.start, modelInfo);
-    const nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args);
+    let nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args);
 
     shuffleArray(nicknames);
 
@@ -72,11 +72,9 @@ export const generateNickname = (args) => {
     const padStartNumber = folders[0].length;
     for (let i = 0; i <= modelInfo.maxSequenceLength; i++) pointers[folders[i]] = JSON.parse(fs.readFileSync(path.join(foldersPath, folders[i], "pointers.json")));
     let preNicknameToFind = preNicknames[0];
+    let previousProgress, currentProgress;
+    let progressCount = 0;
     while (preNicknames.length > 0) {
-      log(`Progress ${getProgress(nicknames, preNicknames)}%`);
-
-      preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind);
-
       loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
 
       for (let i = 0, tempNickname; i < preNicknames.length; i++) {
@@ -84,7 +82,7 @@ export const generateNickname = (args) => {
         if (preNicknames[i].name.slice(-1) == modelInfo.dummy) {
           tempNickname = preNicknames[i].name.substring(0, preNicknames[i].name.length - modelInfo.dummy.length);
           if (tempNickname.length >= args.minimum) {
-            nicknames.push(tempNickname);
+            nicknames.push(firstCharCapital(tempNickname));
             deleteElementFromArray(preNicknames, i);
             i--;
           } else {
@@ -94,13 +92,25 @@ export const generateNickname = (args) => {
           continue;
         }
         if (preNicknames[i].name.length == preNicknames[i].width) {
-          nicknames.push(preNicknames[i].name);
+          nicknames.push(firstCharCapital(preNicknames[i].name));
           deleteElementFromArray(preNicknames, i);
           i--;
         }
       }
 
       deleteOldestWeights(weights, args.cacheSize);
+
+      const nicknamesCount = nicknames.length;
+      nicknames = deleteDuplicates(nicknames);
+      initializeArray(args.minimum, args.maximum, nicknamesCount - nicknames.length, args.start, modelInfo, preNicknames);
+
+      previousProgress = currentProgress;
+      log(`Progress ${((currentProgress = Math.max(getProgress(nicknames, preNicknames))), previousProgress)}%. Delete progress ${progressCount}/100`);
+      preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind);
+
+      if (Math.floor(previousProgress) === Math.floor(currentProgress)) progressCount++;
+      else progressCount = 0;
+      if (progressCount > 100) break;
     }
     return nicknames;
   };
@@ -119,6 +129,40 @@ export const generateNickname = (args) => {
     const filteredPreNicknames = preNicknames.filter((a) => a.sequence <= sequenceToFind);
     if (filteredPreNicknames.length === 0) return preNicknames.sort((a, b) => b.sequence - a.sequence)[0];
     else return filteredPreNicknames.sort((a, b) => b.sequence - a.sequence)[0];
+  };
+
+  const loadWeights = (weights, pointers, padStartNumber, foldersPath, modelInfo, preNickname) => {
+    if (checkIfWeightsAdded(weights, preNickname, modelInfo)) return;
+
+    const strToFind = modelInfo.dummy + preNickname.name.slice(-preNickname.sequence);
+    const paddedSequence = preNickname.sequence.toString().padStart(padStartNumber, "0");
+    const pointersForSequence = pointers[paddedSequence];
+    const sequenceWeightsPath = path.join(foldersPath, paddedSequence);
+    const weigthsFileNames = fs.readdirSync(sequenceWeightsPath).filter((name) => name !== "pointers.json");
+
+    if (!weights[preNickname.sequence]) weights[preNickname.sequence] = {};
+
+    for (let i = 0; i < pointersForSequence.length - 1; i++)
+      if (strToFind.localeCompare(pointersForSequence[i]) >= 0 && strToFind.localeCompare(pointersForSequence[i + 1]) === -1) {
+        const tempWeight = JSON.parse(fs.readFileSync(path.join(sequenceWeightsPath, weigthsFileNames[i])));
+        weights[preNickname.sequence][pointersForSequence[i]] = tempWeight;
+        weights.info.push({
+          sequence: preNickname.sequence,
+          from: pointersForSequence[i],
+          to: pointersForSequence[i + 1],
+          lastUsed: Date.now(),
+          size: sizeof(tempWeight),
+        });
+        break;
+      }
+  };
+
+  const checkIfWeightsAdded = (weights, preNickname, modelInfo) => {
+    const strToFind = modelInfo.dummy + preNickname.name.slice(-preNickname.sequence);
+    for (let i = 0; i < weights.info.length; i++) {
+      if (strToFind.localeCompare(weights.info[i].from) >= 0 && strToFind.localeCompare(weights.info[i].to) === -1 && strToFind.length === weights.info[i].from.length) return true;
+    }
+    return false;
   };
 
   const addCharacterIfAvailable = (preNickname, weights, modelInfo) => {
@@ -154,38 +198,8 @@ export const generateNickname = (args) => {
     weightsInfo.lastUsed = Date.now();
   };
 
-  const loadWeights = (weights, pointers, padStartNumber, foldersPath, modelInfo, preNickname) => {
-    if (checkIfWeightsAdded(weights, preNickname, modelInfo)) return;
-
-    const strToFind = modelInfo.dummy + preNickname.name.slice(-preNickname.sequence);
-    const paddedSequence = preNickname.sequence.toString().padStart(padStartNumber, "0");
-    const pointersForSequence = pointers[paddedSequence];
-    const sequenceWeightsPath = path.join(foldersPath, paddedSequence);
-    const weigthsFileNames = fs.readdirSync(sequenceWeightsPath).filter((name) => name !== "pointers.json");
-
-    if (!weights[preNickname.sequence]) weights[preNickname.sequence] = {};
-
-    for (let i = 0; i < pointersForSequence.length - 1; i++)
-      if (strToFind.localeCompare(pointersForSequence[i]) >= 0 && strToFind.localeCompare(pointersForSequence[i + 1]) === -1) {
-        const tempWeight = JSON.parse(fs.readFileSync(path.join(sequenceWeightsPath, weigthsFileNames[i])));
-        weights[preNickname.sequence][pointersForSequence[i]] = tempWeight;
-        weights.info.push({
-          sequence: preNickname.sequence,
-          from: pointersForSequence[i],
-          to: pointersForSequence[i + 1],
-          lastUsed: Date.now(),
-          size: sizeof(tempWeight),
-        });
-        break;
-      }
-  };
-
-  const checkIfWeightsAdded = (weights, preNickname, modelInfo) => {
-    const strToFind = modelInfo.dummy + preNickname.name.slice(-preNickname.sequence);
-    for (let i = 0; i < weights.info.length; i++) {
-      if (strToFind.localeCompare(weights.info[i].from) >= 0 && strToFind.localeCompare(weights.info[i].to) === -1 && strToFind.length === weights.info[i].from.length) return true;
-    }
-    return false;
+  const firstCharCapital = (str) => {
+    return str.substring(0, 1).toUpperCase() + str.substring(1, str.length);
   };
 
   const deleteOldestWeights = (weights, cacheSize) => {
@@ -234,16 +248,18 @@ export const generateNickname = (args) => {
     return Math.floor(Math.random() * (max - min + 1) + min);
   };
 
+  const deleteDuplicates = (array) => {
+    return array.filter((elem, pos) => array.indexOf(elem) == pos);
+  };
+
   const shuffleArray = (array) => {
     let currentIndex = array.length,
       randomIndex;
     while (currentIndex != 0) {
       randomIndex = Math.floor(Math.random() * currentIndex);
       currentIndex--;
-
       [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
     }
-
     return array;
   };
 
