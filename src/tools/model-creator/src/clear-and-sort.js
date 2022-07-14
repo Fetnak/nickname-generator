@@ -150,6 +150,7 @@ const filePointersToInfo = (folderPath, modelInfo) => {
   let pointers = [];
   let sequenceLength = 0;
   let filenames = filterFilesByString(folderPath, "data.json");
+
   for (let i = 0; i < filenames.length; i++) {
     let file = JSON.parse(fs.readFileSync(path.join(folderPath, filenames[i])));
     const firstSequence = Object.keys(file)[0];
@@ -157,10 +158,18 @@ const filePointersToInfo = (folderPath, modelInfo) => {
     sequenceLength = firstSequence.length - 1;
   }
 
+  pointers[0] = {}[filenames[0]] = getFirstPointer(modelInfo, sequenceLength);
+
   const lastFileIndex = filenames.length - 1;
   pointers.push(({}[filenames[lastFileIndex]] = getLastPointer(modelInfo, sequenceLength)));
 
   fs.writeFileSync(path.join(folderPath, "pointers.json"), JSON.stringify(pointers));
+};
+
+const getFirstPointer = (modelInfo, sequence) => {
+  const getFirstLetter = (alphabet) => alphabet.split("").sort((a, b) => a.localeCompare(b))[0];
+
+  return modelInfo.dummy + getFirstLetter(modelInfo.alphabet).repeat(sequence);
 };
 
 const getLastPointer = (modelInfo, sequence) => {
