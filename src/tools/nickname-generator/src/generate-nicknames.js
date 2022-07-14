@@ -39,12 +39,12 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
           i = pushNickname(tempNickname, i);
         } else {
           deleteElementFromArray(preNicknames, i);
-          addBlankNicknames(1, args.start, modelInfo, preNicknames);
+          addBlankNicknames(1, args.beginning, modelInfo, preNicknames);
         }
         continue;
       } else if (preNicknames[i].name.length > args.maximum) {
         deleteElementFromArray(preNicknames, i);
-        addBlankNicknames(1, args.start, modelInfo, preNicknames);
+        addBlankNicknames(1, args.beginning, modelInfo, preNicknames);
         continue;
       } else if (!args.endedByModel) {
         if (preNicknames[i].name.length >= args.minimum && preNicknames[i].name.length <= args.maximum) {
@@ -183,12 +183,12 @@ const deleteElementFromArray = (array, index) => {
   array.splice(index, 1);
 };
 
-export const addBlankNicknames = (count, start, modelInfo, donePreNicknames) => {
+export const addBlankNicknames = (count, beginning, modelInfo, donePreNicknames) => {
   let preNicknames = donePreNicknames || [];
   for (let i = count; i--; )
     preNicknames.push({
-      name: start,
-      sequence: Math.min(random(1, modelInfo.maxSequenceLength), start.length),
+      name: beginning,
+      sequence: Math.min(random(1, modelInfo.maxSequenceLength), beginning.length),
     });
   return preNicknames;
 };

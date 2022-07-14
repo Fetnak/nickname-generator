@@ -1,15 +1,12 @@
 import fs from "fs";
 import path from "path";
 import dayjs from "dayjs";
-import { log } from "../../functions/log.js";
 import { generateNicknames, addBlankNicknames } from "./src/generate-nicknames.js";
 import { outputArrayAsTable } from "./src/output-array-as-table.js";
 import { shuffleArray } from "./src/shuffle-array.js";
 
 export const generateNickname = (args) => {
   const start = (args) => {
-    log("Start.");
-
     switch (args.form) {
       case "json":
         fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".json"), "");
@@ -23,16 +20,16 @@ export const generateNickname = (args) => {
     const modelInfo = JSON.parse(fs.readFileSync(path.join(foldersPath, "info.json")));
     console.log(modelInfo);
 
-    args.start = checkBeginningOfNickname(args.start, modelInfo.alphabet);
-    args.minimum = args.start.length + args.minimum;
-    args.maximum = args.start.length + args.maximum;
+    args.beginning = checkBeginningOfNickname(args.beginning, modelInfo.alphabet);
+    args.minimum = args.beginning.length + args.minimum;
+    args.maximum = args.beginning.length + args.maximum;
     const maxSequenceLength = fs.readdirSync(foldersPath).filter((name) => name !== "info.json").length - 1;
     modelInfo.maxSequenceLength = args.accuracy > 0 && args.accuracy < maxSequenceLength ? args.accuracy : maxSequenceLength;
-    const preNicknames = addBlankNicknames(args.count, args.start, modelInfo);
+    const preNicknames = addBlankNicknames(args.count, args.beginning, modelInfo);
     const lengths = initializeLengths(args.minimum, args.maximum, args.count);
     let nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args, lengths);
 
-    switch (args.sort.toLowerCase()) {
+    switch (args.sort) {
       case "random":
         shuffleArray(nicknames);
         break;
@@ -57,10 +54,10 @@ export const generateNickname = (args) => {
     }
   };
 
-  const checkBeginningOfNickname = (start, alphabet) => {
+  const checkBeginningOfNickname = (beginning, alphabet) => {
     const regex = new RegExp("[" + alphabet + "]");
     let name = "";
-    for (let i = 0; i < start.length; i++) if (start[i].match(regex)) name += start[i];
+    for (let i = 0; i < beginning.length; i++) if (beginning[i].match(regex)) name += beginning[i];
     return name;
   };
 

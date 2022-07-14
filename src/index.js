@@ -252,13 +252,13 @@ argv.command({
     },
     minimum: {
       alias: "min",
-      describe: "Minimum number of characters in a nickname.",
+      describe: "Minimum number of characters to generate.",
       type: "number",
       default: 4,
     },
     maximum: {
       alias: "max",
-      describe: "Maximum number of characters in a nickname.",
+      describe: "Maximum number of characters to generate.",
       type: "number",
       default: 8,
     },
@@ -304,9 +304,9 @@ argv.command({
       describe: "Display all available models.",
       type: "boolean",
     },
-    start: {
-      alias: "s",
-      describe: "First part of nickname",
+    beginning: {
+      alias: "b",
+      describe: "The beginning of every nickname.",
       type: "string",
       default: "",
     },
@@ -337,7 +337,7 @@ argv.command({
       process.exit();
     }
     argv.cacheSize *= 1024 * 1024;
-    argv.start = argv.start.toLowerCase();
+    argv.beginning = argv.beginning.toLowerCase();
     generateNickname(argv);
   },
 });
