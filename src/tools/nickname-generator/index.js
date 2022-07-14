@@ -32,7 +32,17 @@ export const generateNickname = (args) => {
     const lengths = initializeLengths(args.minimum, args.maximum, args.count);
     let nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args, lengths);
 
-    shuffleArray(nicknames);
+    switch (args.sort.toLowerCase()) {
+      case "random":
+        shuffleArray(nicknames);
+        break;
+      case "asc":
+        nicknames.sort((a, b) => a.localeCompare(b)).sort((a, b) => a.length - b.length);
+        break;
+      case "desc":
+        nicknames.sort((a, b) => b.localeCompare(a)).sort((a, b) => b.length - a.length);
+        break;
+    }
 
     switch (args.form) {
       case "console":

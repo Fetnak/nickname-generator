@@ -301,7 +301,7 @@ argv.command({
     },
     list: {
       alias: "l",
-      describe: "Display all available files from word counter tool.",
+      describe: "Display all available models.",
       type: "boolean",
     },
     start: {
@@ -318,8 +318,14 @@ argv.command({
     generateAttempts: {
       describe: "How many attempts to generate nicknames (effective for small models).",
       type: "number",
-      default: 100
-    }
+      default: 100,
+    },
+    sort: {
+      describe: "Sort output nicknames",
+      type: "string",
+      default: "random",
+      choices: ["random", "asc", "desc"],
+    },
   },
   handler(argv) {
     if (argv.list) {
