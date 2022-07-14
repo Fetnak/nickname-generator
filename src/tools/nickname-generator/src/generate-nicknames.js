@@ -14,6 +14,15 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
   const folders = fs.readdirSync(foldersPath).filter((name) => name !== "info.json");
   const padStartNumber = folders[0].length;
   for (let i = 0; i <= modelInfo.maxSequenceLength; i++) pointers[folders[i]] = JSON.parse(fs.readFileSync(path.join(foldersPath, folders[i], "pointers.json")));
+
+  const pushNickname = (nickname, indexDelete) => {
+    nicknames.push(firstCharCapital(nickname));
+    if (lengths[nickname.length] === 1) delete lengths[nickname.length];
+    else lengths[nickname.length]--;
+    deleteElementFromArray(preNicknames, indexDelete--);
+    return indexDelete;
+  };
+
   let preNicknameToFind = preNicknames[0];
   let previousProgress = 0;
   let currentProgress;
@@ -27,10 +36,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
       if (preNicknames[i].name.slice(-1) == modelInfo.dummy) {
         tempNickname = preNicknames[i].name.substring(0, preNicknames[i].name.length - modelInfo.dummy.length);
         if (lengths[tempNickname.length] > 0 && !isDuplicate(firstCharCapital(tempNickname), nicknames)) {
-          nicknames.push(firstCharCapital(tempNickname));
-          deleteElementFromArray(preNicknames, i--);
-          if (lengths[tempNickname.length] === 1) delete lengths[tempNickname.length];
-          else lengths[tempNickname.length]--;
+          i = pushNickname(tempNickname, i);
         } else {
           deleteElementFromArray(preNicknames, i);
           addBlankNicknames(1, args.start, modelInfo, preNicknames);
@@ -40,6 +46,12 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
         deleteElementFromArray(preNicknames, i);
         addBlankNicknames(1, args.start, modelInfo, preNicknames);
         continue;
+      } else if (!args.endedByModel) {
+        if (preNicknames[i].name.length >= args.minimum && preNicknames[i].name.length <= args.maximum) {
+          if (lengths[preNicknames[i].name.length] > 0 && !isDuplicate(firstCharCapital(preNicknames[i].name), nicknames)) {
+            i = pushNickname(preNicknames[i].name, i);
+          }
+        }
       }
     }
 
@@ -52,7 +64,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
     else dropCounter = 0;
     if (currentProgress > previousProgress) log(`Progress ${(previousProgress = currentProgress)}%.`);
 
-    if (dropCounter >= 100) {
+    if (dropCounter >= args.generateAttempts) {
       console.log(`Nicknames have been created for too long! Generated ${nicknames.length} nicknames.`);
       break;
     }
@@ -140,7 +152,7 @@ const addAvailableCharacter = (preNickname, weights, weightsInfo, modelInfo) => 
 };
 
 const firstCharCapital = (str) => {
-  return str.substring(0, 1).toUpperCase() + str.substring(1, str.length);
+  return str.substring(0, 1).toUpperCase() + str.substring(1, str.length).toLowerCase();
 };
 
 const deleteOldestWeights = (weights, cacheSize) => {

@@ -11,28 +11,28 @@ const argv = yargs(process.argv.slice(2));
 // xmlToTxtConverter
 argv.command({
   command: "xmlToTxtConverter",
-  describe: "Removes all xml tags from file",
+  describe: "Removes all xml tags from file.",
   builder: {
     help: {
       alias: "h",
-      describe: "Show help",
+      describe: "Show help.",
     },
     input: {
       alias: "i",
-      describe: "Path to the xml which needs to be converted",
+      describe: "Path to the xml which needs to be converted.",
       demandOption: true,
       type: "string",
       normalize: true,
     },
     output: {
       alias: "o",
-      describe: "Path to save the converted xml file",
+      describe: "Path to save the converted xml file.",
       type: "string",
       normalize: true,
     },
     chunk: {
       alias: "c",
-      describe: "Size of the processed chunk at a time (in MB)",
+      describe: "Size of the processed chunk at a time (in MB).",
       type: "number",
       choices: [1, 2, 4, 8, 16, 32, 64, 128, 256],
       default: 16,
@@ -47,7 +47,7 @@ argv.command({
 // wordCounter
 argv.command({
   command: "wordCounter",
-  describe: "Counts all words in text file and places the result into the data file and the information file",
+  describe: "Counts all words in text file and places the result into the data file and the information file.",
   builder: {
     help: {
       alias: "h",
@@ -55,14 +55,14 @@ argv.command({
     },
     input: {
       alias: "i",
-      describe: "Path to the text file which needs to be analyzed",
+      describe: "Path to the text file which needs to be analyzed.",
       demandOption: true,
       type: "string",
       normalize: true,
     },
     output: {
       alias: "o",
-      describe: "Path to the folder where you want to save the result into the data file and the information file",
+      describe: "Path to the folder where you want to save the result into the data file and the information file.",
       type: "string",
       normalize: true,
       default: "./resources/words",
@@ -70,28 +70,28 @@ argv.command({
     },
     chunk: {
       alias: "c",
-      describe: "Size of the processed chunk at a time (in MB)",
+      describe: "Size of the processed chunk at a time (in MB).",
       type: "number",
       choices: [1, 2, 4, 8, 16, 32, 64, 128, 256],
       default: 16,
     },
     language: {
       alias: "l",
-      describe: "Language of the text",
+      describe: "Language of the text.",
       type: "string",
       choices: ["eng", "engr", "lat", "rus", "bel", "ukr", "ita", "swe", "fre", "deu", "spa"],
       default: "eng",
     },
     sort: {
       alias: "s",
-      describe: "Sort words by count in result file",
+      describe: "Sort words by count in result file.",
       type: "string",
       choices: ["none", "asc", "desc"],
       default: "none",
     },
     uuid: {
       alias: "u",
-      describe: "Select your own uuid instead of random",
+      describe: "Select your own uuid instead of random.",
       type: "string",
     },
     describtion: {
@@ -108,14 +108,14 @@ argv.command({
 // modelCreator
 argv.command({
   command: "modelCreator",
-  describe: "Use files from a word counter tool to create a model to create nicknames for nickname generator",
+  describe: "Use files from a word counter tool to create a model to create nicknames for nickname generator.",
   builder: {
     help: {
       alias: "h",
-      describe: "Show help",
+      describe: "Show help.",
     },
     input: {
-      describe: "Path to the folder with files from a word counter tool",
+      describe: "Path to the folder with files from a word counter tool.",
       type: "string",
       normalize: true,
       default: "./resources/words",
@@ -123,14 +123,14 @@ argv.command({
     },
     inputUuid: {
       alias: "i",
-      describe: "UUID of a file with words",
+      describe: "UUID of a file with words.",
     },
     outputUuid: {
       alias: "o",
-      describe: "UUID for result model file",
+      describe: "UUID for result model file.",
     },
     output: {
-      describe: "Path to the folder where you want to save the model",
+      describe: "Path to the folder where you want to save the model.",
       type: "string",
       normalize: true,
       default: "./resources/models",
@@ -138,38 +138,38 @@ argv.command({
     },
     sequence: {
       alias: "s",
-      describe: "Size of the character sequence to be processed to create the model",
+      describe: "Size of the character sequence to be processed to create the model.",
       type: "number",
       default: 3,
     },
     parameters: {
       alias: "p",
-      describe: "Path to parameters file, which will be applied during creating model",
+      describe: "Path to parameters file, which will be applied during creating model.",
       type: "string",
     },
     list: {
       alias: "l",
-      describe: "Display all available files from word counter tool",
+      describe: "Display all available files from word counter tool.",
       type: "boolean",
     },
     tempFileLimit: {
-      describe: "Limit for temporary weight files (in MB)",
+      describe: "Limit for temporary weight files (in MB).",
       type: "number",
       default: 8,
     },
     fileLimit: {
-      describe: "Limit for output weight files (in MB)",
+      describe: "Limit for output weight files (in MB).",
       type: "number",
       default: 8,
     },
     checkStep: {
-      describe: "Step for check size of model data in RAM and logging",
+      describe: "Step for check size of model data in RAM and logging.",
       type: "number",
       default: 10000,
     },
     lengthOfProcessedWord: {
       alias: "lpw",
-      describe: "Minimum length of the word to be used to create the model",
+      describe: "Minimum length of the word to be used to create the model.",
       type: "number",
       default: 2,
     },
@@ -198,28 +198,28 @@ argv.command({
 // uuidv4Generator
 argv.command({
   command: "uuidv4Generator",
-  describe: "Generates multiple UUIDs",
+  describe: "Generates multiple UUIDs.",
   builder: {
     help: {
       alias: "h",
-      describe: "Show help",
+      describe: "Show help.",
     },
     count: {
       alias: "c",
-      describe: "How many uuid should be generated",
+      describe: "How many uuid should be generated.",
       type: "number",
       default: 10,
     },
     form: {
       alias: "f",
-      describe: "In what form to provide uuid",
+      describe: "In what form to provide uuid.",
       type: "string",
       default: "console",
       choices: ["console", "json", "text"],
     },
     output: {
       alias: "o",
-      describe: "Path to save file with UUIDs",
+      describe: "Path to save file with UUIDs.",
       type: "string",
       default: "./resources/UUIDs/<filename>",
     },
@@ -232,14 +232,14 @@ argv.command({
 // nicknameGenerator
 argv.command({
   command: "nicknameGenerator",
-  describe: "Generates multiple nicknames",
+  describe: "Generates multiple nicknames.",
   builder: {
     help: {
       alias: "h",
       describe: "Show help",
     },
     input: {
-      describe: "Path to the folder with models",
+      describe: "Path to the folder with models.",
       type: "string",
       default: "./resources/models",
       normalize: true,
@@ -247,61 +247,61 @@ argv.command({
     },
     uuid: {
       alias: "u",
-      describe: "UUID of model",
+      describe: "UUID of model.",
       type: "string",
     },
     minimum: {
       alias: "min",
-      describe: "Minimum number of characters in a nickname",
+      describe: "Minimum number of characters in a nickname.",
       type: "number",
       default: 4,
     },
     maximum: {
       alias: "max",
-      describe: "Maximum number of characters in a nickname",
+      describe: "Maximum number of characters in a nickname.",
       type: "number",
       default: 8,
     },
     accuracy: {
       alias: "a",
-      describe: "Number of previous characters, which will be used to generate next character",
+      describe: "Number of previous characters, which will be used to generate next character.",
       type: "number",
       default: 3,
     },
     count: {
       alias: "c",
-      describe: "How many nicknames should be generated",
+      describe: "How many nicknames should be generated.",
       type: "number",
       default: 240,
     },
     columns: {
       alias: "col",
-      describe: "How many columns will the nicknames be sorted into",
+      describe: "How many columns will the nicknames be sorted into.",
       type: "number",
       default: 12,
     },
     form: {
       alias: "f",
-      describe: "In what form to provide nicknames",
+      describe: "In what form to provide nicknames.",
       type: "string",
       default: "console",
       choices: ["console", "json", "text"],
     },
     output: {
       alias: "o",
-      describe: "Path to save file with nicknames",
+      describe: "Path to save file with nicknames.",
       normalize: true,
       type: "string",
       default: "./",
     },
     cacheSize: {
-      describe: "Size of cache of weights",
+      describe: "Size of cache of weights.",
       type: "string",
       default: 128,
     },
     list: {
       alias: "l",
-      describe: "Display all available files from word counter tool",
+      describe: "Display all available files from word counter tool.",
       type: "boolean",
     },
     start: {
@@ -310,6 +310,16 @@ argv.command({
       type: "string",
       default: "",
     },
+    endedByModel: {
+      describe: "Generate only nicknames whose end has been defined in the model.",
+      type: "boolean",
+      default: true,
+    },
+    generateAttempts: {
+      describe: "How many attempts to generate nicknames (effective for small models).",
+      type: "number",
+      default: 100
+    }
   },
   handler(argv) {
     if (argv.list) {
@@ -328,4 +338,4 @@ argv.command({
 
 argv.wrap(argv.terminalWidth()).version(false).parse();
 
-if (process.argv.slice(2) === []) console.log("Use option --help to see commands");
+if (process.argv.slice(2) === []) console.log("Use option --help to see commands.");
