@@ -27,6 +27,7 @@ export const createModel = (args) => {
     language: wordsInfo.language,
     version: process.env.npm_package_version,
     dummy: "_",
+    calculatedEndings: args.calculateEnding,
   };
 
   let modelData = {};

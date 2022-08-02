@@ -23,10 +23,12 @@ export const generateNickname = (args) => {
     args.beginning = checkBeginningOfNickname(args.beginning, modelInfo.alphabet);
     args.minimum = args.beginning.length + args.minimum;
     args.maximum = args.beginning.length + args.maximum;
+    args.endedByModel = args.endedByModel && modelInfo.calculatedEndings;
     const maxSequenceLength = fs.readdirSync(foldersPath).filter((name) => name !== "info.json").length - 1;
-    modelInfo.maxSequenceLength = args.accuracy > 0 && args.accuracy < maxSequenceLength ? args.accuracy : maxSequenceLength;
-    const preNicknames = addBlankNicknames(args.count, args.beginning, modelInfo);
-    const lengths = initializeLengths(args.minimum, args.maximum, args.count);
+    args.maxAccuracy = args.maxAccuracy > 0 && args.maxAccuracy < maxSequenceLength ? args.maxAccuracy : maxSequenceLength;
+    const preNicknames = [];
+    addBlankNicknames(args.count, args.beginning, args, preNicknames);
+    const lengths = initializeLengths(args.minimum, args.maximum, args.withoutLengths ? args.count * 4 : args.count);
     let nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args, lengths);
 
     switch (args.sort) {
@@ -38,6 +40,14 @@ export const generateNickname = (args) => {
         break;
       case "desc":
         nicknames.sort((a, b) => b.localeCompare(a)).sort((a, b) => b.length - a.length);
+        break;
+      case "asc2":
+        nicknames.sort((a, b) => a.localeCompare(b));
+        break;
+      case "desc2":
+        nicknames.sort((a, b) => b.localeCompare(a));
+        break;
+      default:
         break;
     }
 

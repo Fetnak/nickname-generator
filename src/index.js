@@ -262,9 +262,15 @@ argv.command({
       type: "number",
       default: 8,
     },
-    accuracy: {
-      alias: "a",
-      describe: "Number of previous characters, which will be used to generate next character.",
+    minAccuracy: {
+      alias: "minA",
+      describe: "Min number of previous characters, which will be used to generate next character.",
+      type: "number",
+      default: 1,
+    },
+    maxAccuracy: {
+      alias: "maxA",
+      describe: "Max number of previous characters, which will be used to generate next character.",
       type: "number",
       default: 3,
     },
@@ -311,20 +317,28 @@ argv.command({
       default: "",
     },
     endedByModel: {
+      alias: "e",
       describe: "Generate only nicknames whose end has been defined in the model.",
       type: "boolean",
       default: true,
     },
     generateAttempts: {
+      alias: "ga",
       describe: "How many attempts to generate nicknames (effective for small models).",
       type: "number",
       default: 100,
     },
+    withoutLengths: {
+      alias: "wl",
+      describe: "Don't initialize lengths for generator",
+      type: "boolean",
+    },
     sort: {
+      alias: "s",
       describe: "Sort output nicknames",
       type: "string",
-      default: "random",
-      choices: ["random", "asc", "desc"],
+      default: "none",
+      choices: ["none", "random", "asc", "desc", "asc2", "desc2"],
     },
   },
   handler(argv) {
