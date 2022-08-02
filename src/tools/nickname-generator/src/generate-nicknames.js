@@ -35,24 +35,18 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
       addCharacterIfAvailable(preNicknames[i], weights, modelInfo, args);
       if (preNicknames[i].name.slice(-1) == modelInfo.dummy) {
         tempNickname = preNicknames[i].name.substring(0, preNicknames[i].name.length - modelInfo.dummy.length);
-        if (lengths[tempNickname.length] > 0 && !isDuplicate(firstCharCapital(tempNickname), nicknames)) {
-          i = pushNickname(tempNickname, i);
-        } else {
-          deleteElementFromArray(preNicknames, i);
-          addBlankNicknames(1, args.beginning, args, preNicknames);
-        }
-        continue;
+        if (lengths[tempNickname.length] > 0 && !isDuplicate(firstCharCapital(tempNickname), nicknames)) i = pushNickname(tempNickname, i);
+        else deleteElementFromArray(preNicknames, i);
       } else if (preNicknames[i].name.length > args.maximum) {
         deleteElementFromArray(preNicknames, i);
-        addBlankNicknames(1, args.beginning, args, preNicknames);
-        continue;
-      } else if (!args.endedByModel) {
+      } else if (!args.endByModel) {
         if (preNicknames[i].name.length >= args.minimum && preNicknames[i].name.length <= args.maximum) {
           if (lengths[preNicknames[i].name.length] > 0 && !isDuplicate(firstCharCapital(preNicknames[i].name), nicknames)) {
             i = pushNickname(preNicknames[i].name, i);
           }
         }
       }
+      addBlankNicknames(args.count - (preNicknames.length + nicknames.length), args.beginning, args, preNicknames);
     }
 
     preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind);
@@ -60,7 +54,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
     deleteOldestWeights(weights, args.cacheSize);
 
     currentProgress = getProgress(nicknames, args.count);
-    if (currentProgress === previousProgress) dropCounter++;
+    if (currentProgress <= previousProgress) dropCounter++;
     else dropCounter = 0;
     if (currentProgress > previousProgress) log(`Progress ${((previousProgress = currentProgress) + "%").toString().padEnd(6, " ")}.`);
 
@@ -125,7 +119,7 @@ const addCharacterIfAvailable = (preNickname, weights, modelInfo, args) => {
       const foundedWeights = weights[preNickname.sequence][weights.info[i].from][strToCompare];
       const foundedWeightsInfo = weights.info[i];
       if (foundedWeights !== undefined) addAvailableCharacter(preNickname, foundedWeights, foundedWeightsInfo, args);
-      else preNickname.sequence = preNickname.sequence - 1;
+      else preNickname.sequence = Math.max(args.minAccuracy, preNickname.sequence - 1);
       break;
     }
 };
@@ -183,14 +177,12 @@ const deleteElementFromArray = (array, index) => {
   array.splice(index, 1);
 };
 
-export const addBlankNicknames = (count, beginning, args, donePreNicknames) => {
-  let preNicknames = donePreNicknames || [];
+export const addBlankNicknames = (count, beginning, args, preNicknames) => {
   for (let i = count; i--; )
     preNicknames.push({
       name: beginning,
       sequence: Math.min(random(args.minAccuracy, args.maxAccuracy), beginning.length),
     });
-  return preNicknames;
 };
 
 const isDuplicate = (target, array) => {

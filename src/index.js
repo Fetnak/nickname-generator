@@ -316,7 +316,7 @@ argv.command({
       type: "string",
       default: "",
     },
-    endedByModel: {
+    endByModel: {
       alias: "e",
       describe: "Generate only nicknames whose end has been defined in the model.",
       type: "boolean",
