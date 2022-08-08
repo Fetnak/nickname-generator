@@ -174,7 +174,7 @@ argv.command({
       default: 2,
     },
     calculateEnding: {
-      alias: "calcEnd",
+      alias: "ce",
       description: "Calculate the chance of ending a word",
       type: "boolean",
       default: true,
@@ -263,16 +263,22 @@ argv.command({
       default: 8,
     },
     minAccuracy: {
-      alias: "minA",
+      alias: "mina",
       describe: "Min number of previous characters, which will be used to generate next character.",
       type: "number",
       default: 1,
     },
     maxAccuracy: {
-      alias: "maxA",
+      alias: "maxa",
       describe: "Max number of previous characters, which will be used to generate next character.",
       type: "number",
       default: 3,
+    },
+    progressAccuracy: {
+      alias: "pa",
+      describe: "Accuracy of progress percent",
+      type: "number",
+      default: 2,
     },
     count: {
       alias: "c",
@@ -301,6 +307,7 @@ argv.command({
       default: "./",
     },
     cacheSize: {
+      alias: "cs",
       describe: "Size of cache of weights.",
       type: "string",
       default: 128,
@@ -332,6 +339,13 @@ argv.command({
       alias: "wl",
       describe: "Don't initialize lengths for generator",
       type: "boolean",
+    },
+    removeDuplicates: {
+      alias: "rd",
+      describe: "Remove duplicates during nicknames generation or after nicknames generation",
+      type: "string",
+      default: "during",
+      choices: ["none", "during", "after"]
     },
     sort: {
       alias: "s",

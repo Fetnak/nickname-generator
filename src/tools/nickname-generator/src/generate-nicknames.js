@@ -25,23 +25,22 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
 
   let preNicknameToFind = preNicknames[0];
   let previousProgress = 0;
-  let currentProgress;
+  let currentProgress = 0;
   let dropCounter = 0;
 
+  loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
   while (Object.keys(lengths).length !== 0 && nicknames.length < args.count) {
-    loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
-
     for (let i = 0, tempNickname; i < preNicknames.length; i++) {
       addCharacterIfAvailable(preNicknames[i], weights, modelInfo, args);
       if (preNicknames[i].name.slice(-1) == modelInfo.dummy) {
         tempNickname = preNicknames[i].name.substring(0, preNicknames[i].name.length - modelInfo.dummy.length);
-        if (lengths[tempNickname.length] > 0 && !isDuplicate(firstCharCapital(tempNickname), nicknames)) i = pushNickname(tempNickname, i);
+        if (lengths[tempNickname.length] > 0 && (args.removeDuplicates == "during" ? !isDuplicate(firstCharCapital(tempNickname), nicknames) : true)) i = pushNickname(tempNickname, i);
         else deleteElementFromArray(preNicknames, i);
       } else if (preNicknames[i].name.length > args.maximum) {
         deleteElementFromArray(preNicknames, i);
       } else if (!args.endByModel) {
         if (preNicknames[i].name.length >= args.minimum && preNicknames[i].name.length <= args.maximum) {
-          if (lengths[preNicknames[i].name.length] > 0 && !isDuplicate(firstCharCapital(preNicknames[i].name), nicknames)) {
+          if (lengths[preNicknames[i].name.length] > 0 && (args.removeDuplicates == "during" ? !isDuplicate(firstCharCapital(preNicknames[i].name), nicknames) : true)) {
             i = pushNickname(preNicknames[i].name, i);
           }
         }
@@ -49,14 +48,21 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
       addBlankNicknames(args.count - (preNicknames.length + nicknames.length), args.beginning, args, preNicknames);
     }
 
-    preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind);
-
     deleteOldestWeights(weights, args.cacheSize);
 
-    currentProgress = getProgress(nicknames, args.count);
-    if (currentProgress <= previousProgress) dropCounter++;
-    else dropCounter = 0;
-    if (currentProgress > previousProgress) log(`Progress ${((previousProgress = currentProgress) + "%").toString().padEnd(6, " ")}.`);
+    currentProgress = getProgress(nicknames, args.count, args.progressAccuracy);
+    if (currentProgress <= previousProgress) {
+      preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind);
+      loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
+      dropCounter++;
+    } else dropCounter = 0;
+    if (currentProgress > previousProgress)
+      log(
+        `Progress ${(previousProgress = currentProgress)
+          .toFixed(args.progressAccuracy)
+          .toString()
+          .padStart(4 + args.progressAccuracy, " ")}%.`
+      ); // 5 is 3 integer numbers of progress, 1 is "." between integer and decimal numbers of progress.
 
     if (dropCounter >= args.generateAttempts) {
       console.log(`Nicknames have been created for too long! Generated only ${nicknames.length} nicknames from ${args.count} planned.`);
@@ -66,8 +72,8 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
   return nicknames;
 };
 
-const getProgress = (nicknames, count) => {
-  return Math.round((nicknames.length / count) * 10000) / 100;
+const getProgress = (nicknames, count, progressAccuracy) => {
+  return Math.round((nicknames.length / count) * Math.pow(10, progressAccuracy + 2)) / Math.pow(10, progressAccuracy);
 };
 
 const choosePreNickname = (preNicknames, choosenPreNickname) => {

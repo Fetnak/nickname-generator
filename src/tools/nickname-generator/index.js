@@ -31,6 +31,8 @@ export const generateNickname = (args) => {
     const lengths = initializeLengths(args.minimum, args.maximum, args.withoutLengths ? args.count * 4 : args.count);
     let nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args, lengths);
 
+    if (args.removeDuplicates === "after") nicknames = deleteDuplicates(nicknames);
+
     switch (args.sort) {
       case "random":
         shuffleArray(nicknames);
@@ -80,6 +82,10 @@ export const generateNickname = (args) => {
     }
     if (maxCount != 0) lengths[max] = maxCount;
     return lengths;
+  };
+
+  const deleteDuplicates = (array) => {
+    return array.filter((elem, pos) => array.indexOf(elem) == pos);
   };
 
   start(args);
