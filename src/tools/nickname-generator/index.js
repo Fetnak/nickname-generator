@@ -9,9 +9,11 @@ export const generateNickname = (args) => {
   const start = (args) => {
     switch (args.form) {
       case "json":
+        fs.promises.mkdir(args.output, { recursive: true }).catch(console.error);
         fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".json"), "");
         break;
       case "text":
+        fs.promises.mkdir(args.output, { recursive: true }).catch(console.error);
         fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".txt"), "");
         break;
     }

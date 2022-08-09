@@ -1,6 +1,6 @@
 {
   "name": "nickname-generator",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "Generates a password based on the probability of encountering a letter after the previous ones. Probabilities are calculated from any text, for example: from books",
   "main": "src/index.js",
   "scripts": {

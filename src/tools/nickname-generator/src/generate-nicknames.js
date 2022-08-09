@@ -192,6 +192,6 @@ export const addBlankNicknames = (count, beginning, args, preNicknames) => {
 };
 
 const isDuplicate = (target, array) => {
-  if (array.filter((a) => a === target).length === 0) return false;
+  if (array.includes(target)) return false;
   return true;
 };

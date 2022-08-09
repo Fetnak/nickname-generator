@@ -175,7 +175,7 @@ argv.command({
     },
     calculateEnding: {
       alias: "ce",
-      description: "Calculate the chance of ending a word",
+      description: "Calculate the chance of ending a word.",
       type: "boolean",
       default: true,
     },
@@ -276,7 +276,7 @@ argv.command({
     },
     progressAccuracy: {
       alias: "pa",
-      describe: "Accuracy of progress percent",
+      describe: "Accuracy of progress percent.",
       type: "number",
       default: 2,
     },
@@ -304,7 +304,7 @@ argv.command({
       describe: "Path to save file with nicknames.",
       normalize: true,
       type: "string",
-      default: "./",
+      default: "./resources/nicknames/",
     },
     cacheSize: {
       alias: "cs",
@@ -337,19 +337,19 @@ argv.command({
     },
     withoutLengths: {
       alias: "wl",
-      describe: "Don't initialize lengths for generator",
+      describe: "Don't initialize lengths for generator.",
       type: "boolean",
     },
     removeDuplicates: {
       alias: "rd",
-      describe: "Remove duplicates during nicknames generation or after nicknames generation",
+      describe: "Remove duplicates during nicknames generation or after nicknames generation.",
       type: "string",
       default: "during",
       choices: ["none", "during", "after"]
     },
     sort: {
       alias: "s",
-      describe: "Sort output nicknames",
+      describe: "Sort output nicknames.",
       type: "string",
       default: "none",
       choices: ["none", "random", "asc", "desc", "asc2", "desc2"],
