@@ -5,7 +5,7 @@ import { log } from "../../../functions/log.js";
 import { random } from "../../../functions/random.js";
 
 export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, lengths) => {
-  let nicknames = [];
+  let nicknames = {};
   let pointers = {};
   let weights = {
     info: [],
@@ -16,7 +16,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
   for (let i = 0; i <= args.maxAccuracy; i++) pointers[folders[i]] = JSON.parse(fs.readFileSync(path.join(foldersPath, folders[i], "pointers.json")));
 
   const pushNickname = (nickname, indexDelete) => {
-    nicknames.push(firstCharCapital(nickname));
+    nicknames[firstCharCapital(nickname)] = 0;
     if (lengths[nickname.length] === 1) delete lengths[nickname.length];
     else lengths[nickname.length]--;
     deleteElementFromArray(preNicknames, indexDelete--);
@@ -27,33 +27,35 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
   let previousProgress = 0;
   let currentProgress = 0;
   let dropCounter = 0;
+  let nicknamesCount = 0;
 
   loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
-  while (Object.keys(lengths).length !== 0 && nicknames.length < args.count) {
+  while (preNicknames.length > 0) {
     for (let i = 0, tempNickname; i < preNicknames.length; i++) {
       addCharacterIfAvailable(preNicknames[i], weights, modelInfo, args);
       if (preNicknames[i].name.slice(-1) == modelInfo.dummy) {
         tempNickname = preNicknames[i].name.substring(0, preNicknames[i].name.length - modelInfo.dummy.length);
-        if (lengths[tempNickname.length] > 0 && (args.removeDuplicates == "during" ? !isDuplicate(firstCharCapital(tempNickname), nicknames) : true)) i = pushNickname(tempNickname, i);
+        if (lengths[tempNickname.length] > 0) i = pushNickname(tempNickname, i);
         else deleteElementFromArray(preNicknames, i);
       } else if (preNicknames[i].name.length > args.maximum) {
         deleteElementFromArray(preNicknames, i);
       } else if (!args.endByModel) {
         if (preNicknames[i].name.length >= args.minimum && preNicknames[i].name.length <= args.maximum) {
-          if (lengths[preNicknames[i].name.length] > 0 && (args.removeDuplicates == "during" ? !isDuplicate(firstCharCapital(preNicknames[i].name), nicknames) : true)) {
+          if (lengths[preNicknames[i].name.length] > 0) {
             i = pushNickname(preNicknames[i].name, i);
           }
         }
       }
-      addBlankNicknames(args.count - (preNicknames.length + nicknames.length), args.beginning, args, preNicknames);
     }
+    nicknamesCount = Object.values(nicknames).length;
+
+    if (args.deleteDuplicates) addBlankNicknames(args.count - (preNicknames.length + nicknamesCount), args.beginning, args, preNicknames);
 
     deleteOldestWeights(weights, args.cacheSize);
 
-    currentProgress = getProgress(nicknames, args.count, args.progressAccuracy);
+    currentProgress = getProgress(nicknamesCount, args.count, args.progressAccuracy);
     if (currentProgress <= previousProgress) {
-      preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind);
-      loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
+      if (preNicknames.length > 0) loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, (preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind)));
       dropCounter++;
     } else dropCounter = 0;
     if (currentProgress > previousProgress)
@@ -65,15 +67,15 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
       ); // 5 is 3 integer numbers of progress, 1 is "." between integer and decimal numbers of progress.
 
     if (dropCounter >= args.generateAttempts) {
-      console.log(`Nicknames have been created for too long! Generated only ${nicknames.length} nicknames from ${args.count} planned.`);
+      console.log(`Nicknames have been created for too long! Generated only ${nicknamesCount} nicknames from ${args.count} planned.`);
       break;
     }
   }
-  return nicknames;
+  return Object.keys(nicknames);
 };
 
-const getProgress = (nicknames, count, progressAccuracy) => {
-  return Math.round((nicknames.length / count) * Math.pow(10, progressAccuracy + 2)) / Math.pow(10, progressAccuracy);
+const getProgress = (current, count, progressAccuracy) => {
+  return Math.round((current / count) * Math.pow(10, progressAccuracy + 2)) / Math.pow(10, progressAccuracy);
 };
 
 const choosePreNickname = (preNicknames, choosenPreNickname) => {

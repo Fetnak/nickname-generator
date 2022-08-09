@@ -340,12 +340,11 @@ argv.command({
       describe: "Don't initialize lengths for generator.",
       type: "boolean",
     },
-    removeDuplicates: {
-      alias: "rd",
-      describe: "Remove duplicates during nicknames generation or after nicknames generation.",
-      type: "string",
-      default: "during",
-      choices: ["none", "during", "after"]
+    deleteDuplicates: {
+      alias: "dd",
+      describe: "Delete duplicates during nicknames generation, not after nicknames generation.",
+      type: "boolean",
+      default: true,
     },
     sort: {
       alias: "s",
