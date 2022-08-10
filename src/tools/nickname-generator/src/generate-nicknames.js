@@ -11,15 +11,17 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
     info: [],
   };
 
+  if (!args.generateAttempts) args.generateAttempts = args.minimum + 1;
+  if (!args.progressAccuracy) args.progressAccuracy = args.count.toString().length;
+
   const folders = fs.readdirSync(foldersPath).filter((name) => name !== "info.json");
   const padStartNumber = folders[0].length;
   for (let i = 0; i <= args.maxAccuracy; i++) pointers[folders[i]] = JSON.parse(fs.readFileSync(path.join(foldersPath, folders[i], "pointers.json")));
 
   const pushNickname = (nickname, indexDelete) => {
     nicknames[firstCharCapital(nickname)] = 0;
-    if (lengths[nickname.length] === 1) delete lengths[nickname.length];
-    else lengths[nickname.length]--;
-    deletePreNickname(preNicknames, indexDelete--);
+    if (lengths[nickname.length]-- === 1) delete lengths[nickname.length];
+    deletePreNickname(preNicknames, indexDelete);
     return indexDelete;
   };
 
@@ -30,7 +32,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
 
   loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
   while (preNicknames.length > 0) {
-    for (let i = 0, tempNickname; i < preNicknames.length; i++) {
+    for (let i = preNicknames.length, tempNickname; i--; ) {
       addCharacterIfAvailable(preNicknames[i], weights, modelInfo, args);
       if (preNicknames[i].name.slice(-1) == modelInfo.dummy) {
         tempNickname = preNicknames[i].name.substring(0, preNicknames[i].name.length - modelInfo.dummy.length);
@@ -56,13 +58,13 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
       if (preNicknames.length > 0) loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, (preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind)));
       dropCounter++;
     } else dropCounter = 0;
-    if (currentProgress > previousProgress)
-      log(
-        `Progress ${(previousProgress = currentProgress)
-          .toFixed(args.progressAccuracy)
-          .toString()
-          .padStart(4 + args.progressAccuracy, " ")}%.`
-      ); // 5 is 3 integer numbers of progress, 1 is "." between integer and decimal numbers of progress.
+    //if (currentProgress > previousProgress)
+    log(
+      `Progress ${(previousProgress = currentProgress)
+        .toFixed(args.progressAccuracy)
+        .toString()
+        .padStart(4 + args.progressAccuracy, " ")}%.`
+    ); // 5 is 3 integer numbers of progress, 1 is "." between integer and decimal numbers of progress.
 
     if (dropCounter >= args.generateAttempts) {
       console.log(`Nicknames have been created for too long! Generated only ${Object.values(nicknames).length} nicknames from ${args.count} planned.`);
@@ -193,9 +195,4 @@ export const addBlankNicknames = (count, beginning, args, preNicknames) => {
       name: beginning,
       sequence: Math.min(random(args.minAccuracy, args.maxAccuracy), beginning.length),
     });
-};
-
-const isDuplicate = (target, array) => {
-  if (array.includes(target)) return false;
-  return true;
 };

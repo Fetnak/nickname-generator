@@ -278,7 +278,6 @@ argv.command({
       alias: "pa",
       describe: "Accuracy of progress percent.",
       type: "number",
-      default: 2,
     },
     count: {
       alias: "c",
@@ -333,7 +332,6 @@ argv.command({
       alias: "ga",
       describe: "How many attempts to generate nicknames (effective for small models).",
       type: "number",
-      default: 100,
     },
     withoutLengths: {
       alias: "wl",
