@@ -30,7 +30,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
   let currentProgress = 0;
   let dropCounter = 0;
 
-  loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind);
+  loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind, args);
   while (preNicknames.length > 0) {
     for (let i = preNicknames.length, tempNickname; i--; ) {
       addCharacterIfAvailable(preNicknames[i], weights, modelInfo, args);
@@ -55,16 +55,17 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
 
     currentProgress = getProgress(args.count - preNicknames.length, args.count, args.progressAccuracy);
     if (currentProgress <= previousProgress) {
-      if (preNicknames.length > 0) loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, (preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind)));
+      if (preNicknames.length > 0) loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, (preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind)), args);
       dropCounter++;
     } else dropCounter = 0;
-    //if (currentProgress > previousProgress)
-    log(
-      `Progress ${(previousProgress = currentProgress)
-        .toFixed(args.progressAccuracy)
-        .toString()
-        .padStart(4 + args.progressAccuracy, " ")}%.`
-    ); // 5 is 3 integer numbers of progress, 1 is "." between integer and decimal numbers of progress.
+    //console.log(preNicknames);
+    if (currentProgress > previousProgress)
+      log(
+        `Progress ${(previousProgress = currentProgress)
+          .toFixed(args.progressAccuracy)
+          .toString()
+          .padStart(4 + args.progressAccuracy, " ")}%.`
+      ); // 5 is 3 integer numbers of progress, 1 is "." between integer and decimal numbers of progress.
 
     if (dropCounter >= args.generateAttempts) {
       console.log(`Nicknames have been created for too long! Generated only ${Object.values(nicknames).length} nicknames from ${args.count} planned.`);
@@ -85,7 +86,7 @@ const choosePreNickname = (preNicknames, choosenPreNickname) => {
   else return filteredPreNicknames.sort((a, b) => b.sequence - a.sequence)[0];
 };
 
-const loadWeights = (weights, pointers, padStartNumber, foldersPath, modelInfo, preNickname) => {
+const loadWeights = (weights, pointers, padStartNumber, foldersPath, modelInfo, preNickname, args) => {
   if (checkIfWeightsAdded(weights, preNickname, modelInfo)) return;
 
   const strToFind = modelInfo.dummy + preNickname.name.slice(-preNickname.sequence);
@@ -99,6 +100,12 @@ const loadWeights = (weights, pointers, padStartNumber, foldersPath, modelInfo, 
   for (let i = 0; i < pointersForSequence.length - 1; i++) {
     if (strToFind.localeCompare(pointersForSequence[i]) >= 0 && strToFind.localeCompare(pointersForSequence[i + 1]) === -1) {
       const tempWeight = JSON.parse(fs.readFileSync(path.join(sequenceWeightsPath, weigthsFileNames[i])));
+      if (args.endSuddenly) {
+        let tempWeightArray = Object.keys(tempWeight);
+        for (let i = 0; i < tempWeightArray.length; i++) {
+          delete tempWeight[tempWeightArray[i]][modelInfo.dummy];
+        }
+      }
       weights[preNickname.sequence][pointersForSequence[i]] = tempWeight;
       weights.info.push({
         sequence: preNickname.sequence,
