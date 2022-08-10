@@ -322,27 +322,26 @@ argv.command({
       type: "string",
       default: "",
     },
-    endByModel: {
+    endedSuddenly: {
       alias: "e",
-      describe: "Generate only nicknames whose end has been defined in the model.",
+      describe: "Don't use the model to determine the end of nicknames.",
       type: "boolean",
-      default: true,
     },
     generateAttempts: {
       alias: "ga",
       describe: "How many attempts to generate nicknames (effective for small models).",
       type: "number",
     },
-    withoutLengths: {
-      alias: "wl",
-      describe: "Don't initialize lengths for generator.",
-      type: "boolean",
+    lengthsMultiplier: {
+      alias: "m",
+      describe: "Multiplier to initialization of lengths. 0 to disable initialization of lengths for the generator.",
+      type: "number",
+      default: 1
     },
     deleteDuplicates: {
       alias: "dd",
-      describe: "Delete duplicates during nicknames generation, not after nicknames generation.",
+      describe: "Delete duplicates after nicknames generation, not during nicknames generation.",
       type: "boolean",
-      default: true,
     },
     sort: {
       alias: "s",

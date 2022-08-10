@@ -40,7 +40,8 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
         else deletePreNickname(preNicknames, i);
       } else if (preNicknames[i].name.length > args.maximum) {
         deletePreNickname(preNicknames, i);
-      } else if (!args.endByModel) {
+      } else if (args.endedSuddenly) {
+        console.log("endedSuddenly");
         if (preNicknames[i].name.length >= args.minimum && preNicknames[i].name.length <= args.maximum) {
           if (lengths[preNicknames[i].name.length] > 0) {
             i = pushNickname(preNicknames[i].name, i);
@@ -49,7 +50,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
       }
     }
 
-    if (args.deleteDuplicates) addBlankNicknames(args.count - (preNicknames.length + Object.values(nicknames).length), args.beginning, args, preNicknames);
+    if (!args.deleteDuplicates) addBlankNicknames(args.count - (preNicknames.length + Object.values(nicknames).length), args.beginning, args, preNicknames);
 
     deleteOldestWeights(weights, args.cacheSize);
 

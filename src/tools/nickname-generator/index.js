@@ -25,12 +25,12 @@ export const generateNickname = (args) => {
     args.beginning = checkBeginningOfNickname(args.beginning, modelInfo.alphabet);
     args.minimum = args.beginning.length + args.minimum;
     args.maximum = args.beginning.length + args.maximum;
-    args.endedByModel = args.endedByModel && modelInfo.calculatedEndings;
+    args.endedSuddenly = !(!args.endedSuddenly && modelInfo.calculatedEndings);
     const maxSequenceLength = fs.readdirSync(foldersPath).filter((name) => name !== "info.json").length - 1;
     args.maxAccuracy = args.maxAccuracy > 0 && args.maxAccuracy < maxSequenceLength ? args.maxAccuracy : maxSequenceLength;
     const preNicknames = [];
     addBlankNicknames(args.count, args.beginning, args, preNicknames);
-    const lengths = initializeLengths(args.minimum, args.maximum, args.withoutLengths ? args.count * 4 : args.count);
+    const lengths = initializeLengths(args.minimum, args.maximum, args.count, args.lengthsMultiplier == 0 ? args.maximum - args.minimum + 1 : args.lengthsMultiplier);
     let nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args, lengths);
 
     switch (args.sort) {
@@ -73,8 +73,9 @@ export const generateNickname = (args) => {
     return name;
   };
 
-  const initializeLengths = (min, max, count) => {
+  const initializeLengths = (min, max, count, multiplier) => {
     const lengths = {};
+    count *= multiplier;
     let maxCount = count;
     for (let difference = max - min + 1; min <= max - 1; min++) {
       lengths[min] = Math.round(count / difference);
