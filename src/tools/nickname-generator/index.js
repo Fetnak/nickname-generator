@@ -10,11 +10,9 @@ export const generateNickname = (args) => {
     switch (args.form) {
       case "json":
         fs.promises.mkdir(args.output, { recursive: true }).catch(console.error);
-        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".json"), "");
         break;
       case "text":
         fs.promises.mkdir(args.output, { recursive: true }).catch(console.error);
-        fs.writeFileSync(path.join(args.output, dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + ".txt"), "");
         break;
     }
 
@@ -29,7 +27,7 @@ export const generateNickname = (args) => {
     const maxSequenceLength = fs.readdirSync(foldersPath).filter((name) => name !== "info.json").length - 1;
     args.maxAccuracy = args.maxAccuracy > 0 && args.maxAccuracy < maxSequenceLength ? args.maxAccuracy : maxSequenceLength;
     const preNicknames = [];
-    addBlankNicknames(args.count, args.beginning, args, preNicknames);
+    addBlankNicknames(args.count * args.counterMultiplier, args.beginning, args, preNicknames);
     const lengths = initializeLengths(args.minimum, args.maximum, args.count, args.lengthsMultiplier == 0 ? args.maximum - args.minimum + 1 : args.lengthsMultiplier);
     let nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args, lengths);
 

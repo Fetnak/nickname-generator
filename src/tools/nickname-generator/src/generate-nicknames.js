@@ -12,7 +12,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
   };
 
   if (!args.generateAttempts) args.generateAttempts = args.minimum + 1;
-  if (!args.progressAccuracy) args.progressAccuracy = args.count.toString().length;
+  if (!args.progressAccuracy) args.progressAccuracy = args.count.toString().length - 2;
 
   const folders = fs.readdirSync(foldersPath).filter((name) => name !== "info.json");
   const padStartNumber = folders[0].length;
@@ -29,9 +29,10 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
   let previousProgress = 0;
   let currentProgress = 0;
   let dropCounter = 0;
+  let nicknamesCount = 0;
 
   loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, preNicknameToFind, args);
-  while (preNicknames.length > 0) {
+  while (args.deleteDuplicates ? preNicknames.length > 0 : nicknamesCount < args.count) {
     for (let i = preNicknames.length, tempNickname; i--; ) {
       addCharacterIfAvailable(preNicknames[i], weights, modelInfo, args);
       if (preNicknames[i].name.slice(-1) == modelInfo.dummy) {
@@ -49,16 +50,18 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
       }
     }
 
-    if (!args.deleteDuplicates) addBlankNicknames(args.count - (preNicknames.length + Object.values(nicknames).length), args.beginning, args, preNicknames);
+    if (!args.deleteDuplicates) {
+      nicknamesCount = Object.values(nicknames).length;
+      addBlankNicknames(args.count * args.counterMultiplier - (preNicknames.length + nicknamesCount), args.beginning, args, preNicknames);
+    }
 
     deleteOldestWeights(weights, args.cacheSize);
 
-    currentProgress = getProgress(args.count - preNicknames.length, args.count, args.progressAccuracy);
+    currentProgress = getProgress(args.deleteDuplicates ? args.count - preNicknames.length : nicknamesCount, args.count, args.progressAccuracy);
     if (currentProgress <= previousProgress) {
       if (preNicknames.length > 0) loadWeights(weights, pointers, padStartNumber, foldersPath, modelInfo, (preNicknameToFind = choosePreNickname(preNicknames, preNicknameToFind)), args);
       dropCounter++;
     } else dropCounter = 0;
-    //console.log(preNicknames);
     if (currentProgress > previousProgress)
       log(
         `Progress ${(previousProgress = currentProgress)
@@ -68,7 +71,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
       ); // 5 is 3 integer numbers of progress, 1 is "." between integer and decimal numbers of progress.
 
     if (dropCounter >= args.generateAttempts) {
-      console.log(`Nicknames have been created for too long! Generated only ${Object.values(nicknames).length} nicknames from ${args.count} planned.`);
+      console.log(`Nicknames have been created for too long! Generated only ${nicknamesCount} nicknames from ${args.count} planned.`);
       break;
     }
   }

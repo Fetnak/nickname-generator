@@ -285,6 +285,12 @@ argv.command({
       type: "number",
       default: 240,
     },
+    counterMultiplier: {
+      alias: "cm",
+      describe: "Multiplier for the count of nicknames to speed up generation. Increases memory usage. (Doesn't work with --deleteDuplicates option)",
+      type: "number",
+      default: 1,
+    },
     columns: {
       alias: "col",
       describe: "How many columns will the nicknames be sorted into.",
@@ -336,7 +342,7 @@ argv.command({
       alias: "m",
       describe: "Multiplier to initialization of lengths. 0 to disable initialization of lengths for the generator.",
       type: "number",
-      default: 1
+      default: 1,
     },
     deleteDuplicates: {
       alias: "dd",
