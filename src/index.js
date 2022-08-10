@@ -322,7 +322,7 @@ argv.command({
       type: "string",
       default: "",
     },
-    endedSuddenly: {
+    endSuddenly: {
       alias: "e",
       describe: "Don't use the model to determine the end of nicknames.",
       type: "boolean",

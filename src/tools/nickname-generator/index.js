@@ -25,7 +25,7 @@ export const generateNickname = (args) => {
     args.beginning = checkBeginningOfNickname(args.beginning, modelInfo.alphabet);
     args.minimum = args.beginning.length + args.minimum;
     args.maximum = args.beginning.length + args.maximum;
-    args.endedSuddenly = !(!args.endedSuddenly && modelInfo.calculatedEndings);
+    args.endSuddenly = !(!args.endSuddenly && modelInfo.calculatedEndings);
     const maxSequenceLength = fs.readdirSync(foldersPath).filter((name) => name !== "info.json").length - 1;
     args.maxAccuracy = args.maxAccuracy > 0 && args.maxAccuracy < maxSequenceLength ? args.maxAccuracy : maxSequenceLength;
     const preNicknames = [];

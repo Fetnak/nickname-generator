@@ -40,8 +40,7 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
         else deletePreNickname(preNicknames, i);
       } else if (preNicknames[i].name.length > args.maximum) {
         deletePreNickname(preNicknames, i);
-      } else if (args.endedSuddenly) {
-        console.log("endedSuddenly");
+      } else if (args.endSuddenly) {
         if (preNicknames[i].name.length >= args.minimum && preNicknames[i].name.length <= args.maximum) {
           if (lengths[preNicknames[i].name.length] > 0) {
             i = pushNickname(preNicknames[i].name, i);
