@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { generateNicknames, addBlankNicknames } from "./src/generate-nicknames.js";
 import { outputArrayAsTable } from "./src/output-array-as-table.js";
 import { shuffleArray } from "./src/shuffle-array.js";
+import PreNickname from "./src/classes/pre-nickname.js"
 
 export const generateNickname = (args) => {
   const start = (args) => {
@@ -27,7 +28,9 @@ export const generateNickname = (args) => {
     const maxSequenceLength = fs.readdirSync(foldersPath).filter((name) => name !== "info.json").length - 1;
     args.maxAccuracy = args.maxAccuracy > 0 && args.maxAccuracy < maxSequenceLength ? args.maxAccuracy : maxSequenceLength;
     const preNicknames = [];
-    addBlankNicknames(args.count * args.counterMultiplier, args, preNicknames);
+		for (let i = args.count * args.counterMultiplier; i-- ;) {
+			preNicknames.push(new PreNickname(args, modelInfo))
+		}
     const lengths = initializeLengths(args.minimum, args.maximum, args.count, args.lengthsMultiplier == 0 ? args.maximum - args.minimum + 1 : args.lengthsMultiplier);
     let nicknames = generateNicknames(preNicknames, foldersPath, modelInfo, args, lengths);
 

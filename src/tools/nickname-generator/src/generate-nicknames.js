@@ -4,6 +4,7 @@ import sizeof from "object-sizeof";
 import { log } from "../../../functions/log.js";
 import { random } from "../../../functions/random.js";
 import Cache from "./classes/cache.js"
+import PreNickname from "./classes/pre-nickname.js"
 
 export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, lengths) => {
   let nicknames = {};
@@ -53,8 +54,9 @@ export const generateNicknames = (preNicknames, foldersPath, modelInfo, args, le
 
     if (!args.deleteDuplicates) {
       nicknamesCount = Object.values(nicknames).length;
-      addBlankNicknames(args.count * args.counterMultiplier - (preNicknames.length + nicknamesCount), args, preNicknames);
-    }
+			for (let i = args.count * args.counterMultiplier - (preNicknames.length + nicknamesCount); i--; )
+				preNicknames.push(new PreNickname(args, modelInfo))
+		}
 
     cache.deleteOldestWeights();
 
