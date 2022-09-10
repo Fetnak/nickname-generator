@@ -2,6 +2,7 @@
 resources/
 versions/
 test.mjs
+lib/
 
 # Logs
 logs
