@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import dayjs from "dayjs";
-import { generateNicknames, addBlankNicknames } from "./src/generate-nicknames.js";
+import { generateNicknames } from "./src/generate-nicknames.js";
 import { outputArrayAsTable } from "./src/output-array-as-table.js";
 import { shuffleArray } from "./src/shuffle-array.js";
 import PreNickname from "./src/classes/pre-nickname.js"

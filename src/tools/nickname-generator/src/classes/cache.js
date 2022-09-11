@@ -27,8 +27,7 @@ export default class Cache {
   }
 
   addCharacterIfAvailable(preNickname) {
-    const strToCompare =
-      this.param.dummy + preNickname.name.slice(-preNickname.sequence);
+    const strToCompare = preNickname.getStringToWeights();
     if (!this.info[preNickname.sequence]) return;
     for (let i = 0, info; i < this.info[preNickname.sequence].length; i++) {
       info = this.info[preNickname.sequence][i];
@@ -45,11 +44,7 @@ export default class Cache {
             foundedWeights,
             foundedWeightsInfo
           );
-        else
-          preNickname.sequence = Math.max(
-            this.param.minAccuracy,
-            preNickname.sequence - 1
-          );
+        else preNickname.decreaseSequence();
         break;
       }
     }
@@ -73,17 +68,13 @@ export default class Cache {
       }
       weightsCounter += chances[chars[i]];
     }
-    preNickname.name += nextChar;
-    preNickname.sequence = Math.min(
-      random(this.param.minAccuracy, this.param.maxAccuracy),
-      preNickname.name.length
-    );
+    preNickname.addCharacters(nextChar);
+    preNickname.randomizeSequence();
     chancesInfo.lastUsed = Date.now();
   }
 
   loadWeights(preNickname) {
-    const strToFind =
-      this.param.dummy + preNickname.name.slice(-preNickname.sequence);
+    const strToFind = preNickname.getStringToWeights();
 
     if (this.checkIfWeightsAdded(strToFind)) return;
 

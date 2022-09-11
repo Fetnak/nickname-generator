@@ -105,13 +105,3 @@ const deletePreNickname = (array, index) => {
   array.pop();
 };
 
-export const addBlankNicknames = (count, args, preNicknames) => {
-  for (let i = count; i--; ) addPreNickname(args.beginning, args, preNicknames);
-};
-
-const addPreNickname = (name, args, preNicknames) => {
-  preNicknames.push({
-    name: name,
-    sequence: Math.min(random(args.minAccuracy, args.maxAccuracy), name.length),
-  });
-};

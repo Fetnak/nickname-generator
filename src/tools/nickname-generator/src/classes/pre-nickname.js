@@ -1,4 +1,4 @@
-import {random} from "../../../../functions/random.js"
+import { random } from "../../../../functions/random.js";
 
 export default class preNickname {
   constructor(args, modelInfo) {
@@ -9,9 +9,12 @@ export default class preNickname {
       maxAccuracy: args.maxAccuracy,
       dummy: modelInfo.dummy,
     };
-		this.randomizeSequence();
+    this.randomizeSequence();
   }
 
+  addCharacters(str) {
+    this.name += str;
+  }
   isEnded() {
     if (this.name.slice(-this.param.dummy) === this.param.dummy) return true;
     return false;
@@ -27,16 +30,18 @@ export default class preNickname {
     this.name = this.withoutDummy();
   }
 
-	randomizeSequence() {
-		this.sequence = Math.min(random(this.param.minAccuracy, this.param.maxAccuracy), this.name.length);
-	}
+  randomizeSequence() {
+    this.sequence = Math.min(
+      random(this.param.minAccuracy, this.param.maxAccuracy),
+      this.name.length
+    );
+  }
 
-	decreaseSequence() {
-		this.sequence = Math.max(this.param.minAccuracy, this.sequence - 1)
-	}
+  decreaseSequence() {
+    this.sequence = Math.max(this.param.minAccuracy, this.sequence - 1);
+  }
 
-	getStringToWeights() {
-		this.param.dummy + this.name.slice(-this.sequence);
-	}
-
+  getStringToWeights() {
+    return this.param.dummy + this.name.slice(-this.sequence);
+  }
 }
