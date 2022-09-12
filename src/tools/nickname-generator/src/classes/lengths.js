@@ -44,7 +44,6 @@ export default class Lengths {
   }
 
   lengthsIsEmpty() {
-    if (Object.values(this.data).length === 0) return true;
-    return false;
+    return Object.values(this.data).length === 0;
   }
 }
