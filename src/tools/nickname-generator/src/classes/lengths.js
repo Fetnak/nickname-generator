@@ -29,13 +29,11 @@ export default class Lengths {
   }
 
   isStringFits(str) {
-    if (this.data[str.length]) return true;
-    return false;
+    return this.data[str.length];
   }
 
   isStringStillUsable(str) {
-    if (str.length < Object.keys(this.data)[0]) return true;
-    return false;
+    return str.length < Object.keys(this.data)[0];
   }
 
   decreaseLength(str) {
