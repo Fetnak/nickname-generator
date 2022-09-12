@@ -12,12 +12,8 @@ export default class Cache {
     this.size = 0;
     this.param = {
       modelPath: path.join(args.input, "model-" + args.uuid),
-      input: args.input,
-      uuid: args.uuid,
-      minAccuracy: args.minAccuracy,
       maxAccuracy: args.maxAccuracy,
       dummy: modelInfo.dummy,
-      dummydummy: modelInfo.dummy.repeat(2),
       padStartCount: undefined,
       endSuddenly: args.endSuddenly,
       cacheSize: args.cacheSize,
@@ -52,6 +48,7 @@ export default class Cache {
 
   addAvailableCharacter(preNickname, chances, chancesInfo) {
     const chars = Object.keys(chances);
+		if (chars.length === 0) return preNickname.randomizeSequence();
     let weightsCounter = Object.values(chances).reduce((acc, val) => acc + val);
 
     const randomNumber = random(1, weightsCounter);
@@ -113,8 +110,8 @@ export default class Cache {
         }
         this.weights[preNickname.sequence][pointersForSequence[i]] =
           foundedWeightsPart;
-        if (!this.info[preNickname.sequence])
-          this.info[preNickname.sequence] = [];
+
+        if (!this.info[preNickname.sequence]) this.info[preNickname.sequence] = [];
 
         this.info[preNickname.sequence].push({
           from: pointersForSequence[i],
