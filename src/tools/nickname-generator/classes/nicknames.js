@@ -109,11 +109,16 @@ export default class Nicknames {
       if (this.lengths.isStringFits(preNickname.name))
         this.movePreNicknameToNicknames(preNickname, index);
       else preNickname.reset();
-    } else if (this.param.endSuddenly)
-      if (this.lengths.isStringFits(preNickname.name))
-        if (preNickname.isLengthFits())
-          this.movePreNicknameToNicknames(preNickname, index);
-        else this.deletePreNickname(index);
+    } else if (this.param.endSuddenly) {
+      if (this.isNicknameAlreadyExists(preNickname.firstCharToCapital())) {
+        if (!preNickname.isLengthFits()) preNickname.reset();
+      } else if (this.lengths.isStringFits(preNickname.name))
+        this.movePreNicknameToNicknames(preNickname, index);
+    }
+  }
+
+  isNicknameAlreadyExists(nickname) {
+    return this.nicknames[nickname];
   }
 
   checkPreNicknameCount() {

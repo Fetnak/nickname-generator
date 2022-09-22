@@ -5,12 +5,12 @@ import Output from "./classes/output.js";
 
 export const generateNickname = (args) => {
   const start = (args) => {
-    const checkedArgs = new Args(args);
-    checkedArgs.outputArgs();
-    const cache = new Cache(checkedArgs);
-    const output = new Output(checkedArgs);
+    args = new Args(args);
+    args.outputArgs();
+    const cache = new Cache(args);
+    const output = new Output(args);
     output.checkFilePath();
-    const nicknames = new Nicknames(checkedArgs, cache).generateNicknames();
+    const nicknames = new Nicknames(args, cache).generateNicknames();
     output.sortArray(nicknames);
     output.outputArray(nicknames);
   };
