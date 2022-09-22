@@ -1,8 +1,4 @@
-import fs from "fs";
-import path from "path";
-import sizeof from "object-sizeof";
 import { log } from "../../../../functions/log.js";
-import { random } from "../../../../functions/random.js";
 import PreNickname from "./pre-nickname.js";
 import Lengths from "./lengths.js";
 
