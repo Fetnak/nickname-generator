@@ -1,7 +1,7 @@
-import Args from "./src/classes/args.js";
-import Cache from "./src/classes/cache.js";
-import Nicknames from "./src/classes/nicknames.js";
-import Output from "./src/classes/output.js";
+import Args from "./classes/args.js";
+import Cache from "./classes/cache.js";
+import Nicknames from "./classes/nicknames.js";
+import Output from "./classes/output.js";
 
 export const generateNickname = (args) => {
   const start = (args) => {

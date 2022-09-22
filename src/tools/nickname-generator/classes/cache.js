@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import sizeof from "object-sizeof";
-import { random } from "../../../../functions/random.js";
+import { random } from "../functions/random.js";
 
 export default class Cache {
   constructor(args) {

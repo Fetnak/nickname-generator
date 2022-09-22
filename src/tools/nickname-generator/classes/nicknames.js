@@ -1,4 +1,4 @@
-import { log } from "../../../../functions/log.js";
+import { log } from "../../../functions/log.js";
 import PreNickname from "./pre-nickname.js";
 import Lengths from "./lengths.js";
 
