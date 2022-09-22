@@ -4,12 +4,11 @@ import sizeof from "object-sizeof";
 import { log } from "../../../../functions/log.js";
 import { random } from "../../../../functions/random.js";
 import PreNickname from "./pre-nickname.js";
-import Cache from "./cache.js";
 import Lengths from "./lengths.js";
 
 export default class Nicknames {
-  constructor(args, modelInfo) {
-    this.cache = new Cache(args, modelInfo);
+  constructor(args, cache) {
+    this.cache = cache;
     this.lengths = new Lengths(args);
     this.preNicknames = [];
     this.preNicknameForLoadWeights;
@@ -21,19 +20,13 @@ export default class Nicknames {
       maximum: args.maximum,
       minAccuracy: args.minAccuracy,
       maxAccuracy: args.maxAccuracy,
-      dummy: modelInfo.dummy,
+      dummy: args.dummy,
     };
     this.param = {
       count: args.count,
       counterMultiplier: args.counterMultiplier,
-      generateAttempts: args.generateAttempts
-        ? args.generateAttempts
-        : args.endSuddenly
-        ? args.minimum + args.maxAccuracy - 1
-        : args.minimum * args.maxAccuracy,
-      progressAccuracy: args.progressAccuracy
-        ? args.progressAccuracy
-        : Math.max(args.count.toString().length - 2, 0),
+      generateAttempts: args.generateAttempts,
+      progressAccuracy: args.progressAccuracy,
       deleteDuplicates: args.deleteDuplicates,
       endSuddenly: args.endSuddenly,
     };
@@ -101,34 +94,38 @@ export default class Nicknames {
   generateNicknames() {
     this.cache.loadWeights(this.choosePreNicknameForLoadWeights());
     while (this.areNicknamesGenerated()) {
-      for (let i = this.preNicknames.length; i--; ) {
-        this.cache.addCharacterIfAvailable(this.preNicknames[i]);
-        if (this.preNicknames[i].isEnded()) {
-          this.preNicknames[i].removeEnding();
-          if (this.lengths.isStringFits(this.preNicknames[i].name))
-            this.movePreNicknameToNicknames(this.preNicknames[i], i);
-          else if (!this.lengths.isStringStillUsable(this.preNicknames[i].name))
-            this.deletePreNickname(i);
-        } else if (this.param.endSuddenly)
-          if (this.lengths.isStringFits(this.preNicknames[i].name))
-            if (this.preNicknames[i].isLengthFits())
-              this.movePreNicknameToNicknames(this.preNicknames[i], i);
-            else this.deletePreNickname(i);
-      }
-
+      for (let i = this.preNicknames.length; i--; )
+        this.processPreNickname(this.preNicknames[i], i);
       this.calculateAndWriteProgress();
       if (this.needToDrop()) break;
 
-      if (!this.param.deleteDuplicates) {
-        this.addPreNicknames(
-          this.param.count * this.param.counterMultiplier -
-            (this.preNicknames.length + this.nicknamesCount)
-        );
-      }
+      this.checkPreNicknameCount();
 
       this.cache.deleteOldestWeights();
     }
     return Object.keys(this.nicknames);
+  }
+
+  processPreNickname(preNickname, index) {
+    this.cache.addCharacterIfAvailable(preNickname);
+    if (preNickname.isEnded()) {
+      preNickname.removeEnding();
+      if (this.lengths.isStringFits(preNickname.name))
+        this.movePreNicknameToNicknames(preNickname, index);
+      else preNickname.reset();
+    } else if (this.param.endSuddenly)
+      if (this.lengths.isStringFits(preNickname.name))
+        if (preNickname.isLengthFits())
+          this.movePreNicknameToNicknames(preNickname, index);
+        else this.deletePreNickname(index);
+  }
+
+  checkPreNicknameCount() {
+    if (!this.param.deleteDuplicates)
+      this.addPreNicknames(
+        this.param.count * this.param.counterMultiplier -
+          (this.preNicknames.length + this.nicknamesCount)
+      );
   }
 
   choosePreNicknameForLoadWeights() {

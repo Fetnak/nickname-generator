@@ -5,10 +5,7 @@ export default class Lengths {
       minimum: args.minimum,
       maximum: args.maximum,
       count: args.count,
-      lengthsMultiplier:
-        args.lengthsMultiplier === 0
-          ? args.maximum - args.minimum + 1
-          : args.lengthsMultiplier,
+      lengthsMultiplier: args.lengthsMultiplier,
     };
 
     this.initializeLengths();
@@ -28,7 +25,7 @@ export default class Lengths {
     for (const key in this.data) if (this.data[key] <= 0) delete this.data[key];
   }
 
-  isStringFits(str) {
+ isStringFits(str) {
     return this.data[str.length];
   }
 

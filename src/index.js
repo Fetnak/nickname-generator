@@ -179,6 +179,12 @@ argv.command({
       type: "boolean",
       default: true,
     },
+		resetMultiplier: {
+			alias: "rm",
+			description: "Always take the multiplier as 1",
+			type: "boolean",
+			default: false,
+		}
   },
   handler(argv) {
     if (argv.list) {
@@ -314,7 +320,7 @@ argv.command({
     cacheSize: {
       alias: "cs",
       describe: "Size of cache of weights.",
-      type: "string",
+      type: "number",
       default: 128,
     },
     list: {
@@ -366,8 +372,6 @@ argv.command({
       console.log("Option --uuid is empty!");
       process.exit();
     }
-    argv.cacheSize *= 1024 * 1024;
-    argv.beginning = argv.beginning.toLowerCase();
     generateNickname(argv);
   },
 });

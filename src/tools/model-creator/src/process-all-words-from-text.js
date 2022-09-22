@@ -16,7 +16,7 @@ export const processAllWordsFromText = (result, modelInfo, wordsData, modelFolde
   for (let i = wl, word; i--; ) {
     if (args.calculateEnding) word = words[i] + DUMMY;
     else word = words[i];
-    if (words[i].length >= args.lengthOfProcessedWord) processOneWord(word, wordsData[words[i]], args.sequence, modelInfo, result);
+    if (words[i].length >= args.lengthOfProcessedWord) processOneWord(word, args.resetMultiplier ? 1 : wordsData[words[i]], args.sequence, modelInfo, result);
     if (i % args.checkStep == 0) {
       tempForLog = Math.abs(i - forLog);
       if (biggestCounter === undefined && tempForLog !== 0) biggestCounter = checkBiggestCounterSize(result, biggestCounter);
@@ -68,7 +68,7 @@ export const writeToDriveAll = (from, obj, modelFolder) => {
 };
 
 const writeToDrive = (obj, counter, modelFolder) => {
-  fs.promises.mkdir(path.join(modelFolder, counter.toString()), { recursive: true }).catch(console.error);
+  fs.mkdirSync(path.join(modelFolder, counter.toString()), { recursive: true });
   if (modelFileCounter[counter] === undefined) {
     modelFileCounter[counter] = 0;
   } else {

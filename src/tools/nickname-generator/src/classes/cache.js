@@ -1,19 +1,18 @@
 import fs from "fs";
 import path from "path";
 import sizeof from "object-sizeof";
-import { log } from "../../../../functions/log.js";
 import { random } from "../../../../functions/random.js";
 
 export default class Cache {
-  constructor(args, modelInfo) {
+  constructor(args) {
     this.weights = {};
     this.info = {};
     this.pointers = {};
     this.size = 0;
     this.param = {
-      modelPath: path.join(args.input, "model-" + args.uuid),
+      modelPath: args.modelPath,
       maxAccuracy: args.maxAccuracy,
-      dummy: modelInfo.dummy,
+      dummy: args.dummy,
       padStartCount: undefined,
       endSuddenly: args.endSuddenly,
       cacheSize: args.cacheSize,
