@@ -1,4 +1,5 @@
 import { log } from "../../../functions/log.js";
+import firstCharToCapital from "../functions/first-char-to-capital.js";
 import PreNickname from "./pre-nickname.js";
 import Lengths from "./lengths.js";
 
@@ -66,17 +67,16 @@ export default class Nicknames {
           .toFixed(this.param.progressAccuracy)
           .toString()
           .padStart(4 + this.param.progressAccuracy, " ")}%.`
-      ); // 4 is 3 integer numbers of progress, 1 is "." between integer and decimal numbers of progress.
+      ); // 4 is 3 integer numbers of progress(100), 1 is "." between integer and decimal numbers of progress.
       this.progress.counterUntilDrop = 0;
     }
   }
 
   movePreNicknameToNicknames(preNickname, preNicknameIndex) {
-    const firstCapital = preNickname.firstCharToCapital();
-    if (!this.nicknames[firstCapital]) {
-      this.nicknames[firstCapital] = 1;
+    if (!this.nicknames[preNickname.name]) {
+      this.nicknames[preNickname.name] = 1;
       this.nicknamesCount++;
-      this.lengths.decreaseLength(firstCapital);
+      this.lengths.decreaseLength(preNickname.name);
     }
     this.deletePreNickname(preNicknameIndex);
   }
@@ -95,11 +95,11 @@ export default class Nicknames {
       this.calculateAndWriteProgress();
       if (this.needToDrop()) break;
 
-      this.checkPreNicknameCount();
+      this.checkPreNicknamesCount();
 
       this.cache.deleteOldestWeights();
     }
-    return Object.keys(this.nicknames);
+    return Object.keys(this.nicknames).map((x) => firstCharToCapital(x));
   }
 
   processPreNickname(preNickname, index) {
@@ -110,7 +110,7 @@ export default class Nicknames {
         this.movePreNicknameToNicknames(preNickname, index);
       else preNickname.reset();
     } else if (this.param.endSuddenly) {
-      if (this.isNicknameAlreadyExists(preNickname.firstCharToCapital())) {
+      if (this.isNicknameAlreadyExists(preNickname.name)) {
         if (!preNickname.isLengthFits()) preNickname.reset();
       } else if (this.lengths.isStringFits(preNickname.name))
         this.movePreNicknameToNicknames(preNickname, index);
@@ -121,7 +121,7 @@ export default class Nicknames {
     return this.nicknames[nickname];
   }
 
-  checkPreNicknameCount() {
+  checkPreNicknamesCount() {
     if (!this.param.deleteDuplicates)
       this.addPreNicknames(
         this.param.count * this.param.counterMultiplier -

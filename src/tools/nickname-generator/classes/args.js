@@ -45,10 +45,7 @@ export default class Args {
     return name;
   }
   parseMinimum() {
-    return (
-      this.beginning.length +
-      Math.max(1, Math.min(this.args.minimum, this.args.maximum))
-    );
+    return this.beginning.length + Math.max(1, this.args.minimum);
   }
   parseMaximum() {
     return Math.max(this.minimum, this.beginning.length + this.args.maximum);
@@ -95,7 +92,17 @@ export default class Args {
     return Math.max(1, this.args.counterMultiplier);
   }
   parseOutputFilePath() {
-    const extension = this.form === "json" ? ".json" : ".text";
+    let extension;
+    switch (this.form) {
+      case "json":
+        extension = ".json";
+        break;
+      case "text":
+        extension = ".txt";
+        break;
+      default:
+        return undefined;
+    }
     return path.join(
       this.output,
       dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + extension

@@ -1,7 +1,7 @@
 export default {
   rus: {
     language: "Russian",
-    alphabet: "абвгдеёжзийклмнопрстуфхцчшщъыьбэюя",
+    alphabet: "абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
     isLetterFunctionType: "regex",
   },
   bel: {
