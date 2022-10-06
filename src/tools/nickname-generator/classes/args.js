@@ -25,6 +25,7 @@ export default class Args {
     this.form = args.form;
     this.output = args.output;
     this.outputFilePath = this.parseOutputFilePath();
+    this.cacheSize = this.parseCacheSize();
   }
   outputArgs() {
     delete this.args;
@@ -107,5 +108,8 @@ export default class Args {
       this.output,
       dayjs(Date.now()).format("YYYY-MM-DD_HH-mm-ss") + extension
     );
+  }
+  parseCacheSize() {
+    return this.args.cacheSize * 1024 * 1024;
   }
 }

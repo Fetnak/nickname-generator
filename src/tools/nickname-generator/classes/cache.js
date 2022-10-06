@@ -57,21 +57,19 @@ export default class Cache {
 
   addAvailableCharacter(preNickname, chances, chancesInfo, chancesCache) {
     const chars = chancesCache.chars;
-    if (chars.length === 0) return preNickname.randomizeSequence();
-    let chancesSum = chancesCache.sum;
 
-    const randomNumber = random(1, chancesSum);
+    const randomNumber = random(1, chancesCache.sum);
 
-    chancesSum = 0;
-    let nextChar;
+    let counter = 0,
+      nextChar;
     for (let i = chars.length; i--; ) {
       if (
-        randomNumber > chancesSum &&
-        randomNumber <= chancesSum + chances[chars[i]]
+        randomNumber > counter &&
+        randomNumber <= counter + chances[chars[i]]
       ) {
         nextChar = chars[i];
         break;
-      } else chancesSum += chances[chars[i]];
+      } else counter += chances[chars[i]];
     }
     preNickname.addCharacters(nextChar);
     preNickname.randomizeSequence();
@@ -129,23 +127,35 @@ export default class Cache {
             delete foundedWeightsPart[foundedWeightsPartArray[i]][
               this.param.dummy
             ];
+            if (
+              !Object.values(foundedWeightsPart[foundedWeightsPartArray[i]])
+                .length
+            )
+              delete foundedWeightsPart[foundedWeightsPartArray[i]];
           }
         }
-        this.weights[preNickname.sequence][pointersForSequence[i]] =
-          foundedWeightsPart;
-
-        if (!this.info[preNickname.sequence])
-          this.info[preNickname.sequence] = [];
-
-        this.info[preNickname.sequence].push({
-          from: pointersForSequence[i],
-          to: pointersForSequence[i + 1],
-          lastUsed: Date.now(),
-        });
-        this.size += sizeof(foundedWeightsPart);
+        this.addChances(
+          foundedWeightsPart,
+          preNickname.sequence,
+          pointersForSequence[i],
+          pointersForSequence[i + 1]
+        );
         break;
       }
     }
+  }
+
+  addChances(chances, sequence, from, to) {
+    this.weights[sequence][from] = chances;
+
+    if (!this.info[sequence]) this.info[sequence] = [];
+
+    this.info[sequence].push({
+      from,
+      to,
+      lastUsed: Date.now(),
+    });
+    this.size += sizeof(chances);
   }
 
   checkIfWeightsAdded(strToFind) {
@@ -162,27 +172,34 @@ export default class Cache {
   }
 
   deleteOldestWeights() {
-    if (this.size < this.param.cacheSize) return;
-
+    let oldestWeights = [];
     while (this.size > this.param.cacheSize) {
-      let oldestWeights = { lastUsed: Date.now() };
-
-      for (const key in this.info)
-        for (let i = 0; i < this.info[key].length; i++)
-          if (oldestWeights.lastUsed > this.info[key][i].lastUsed) {
-            oldestWeights = this.info[key][i];
-            oldestWeights.index = i;
-            oldestWeights.sequence = key;
-          }
-
-      this.size -= sizeof(
-        this.weights[oldestWeights.sequence][oldestWeights.from]
-      );
-      this.info[oldestWeights.sequence].splice(oldestWeights.index, 1);
-      delete this.weights[oldestWeights.sequence][oldestWeights.from];
-      delete this.weightsCounter[oldestWeights.sequence][oldestWeights.from];
-      global.gc();
+      if (oldestWeights.length === 0) oldestWeights = this.getOldestWeights();
+      this.deleteWeight(oldestWeights[oldestWeights.length - 1]);
+      oldestWeights.pop();
     }
+  }
+
+  deleteWeight(weightInfo) {
+    this.size -= sizeof(this.weights[weightInfo.sequence][weightInfo.from]);
+    delete this.weights[weightInfo.sequence][weightInfo.from];
+    if (this.chancesCache[weightInfo.sequence])
+      delete this.chancesCache[weightInfo.sequence][weightInfo.from];
+    this.info[weightInfo.sequence].splice(weightInfo.index, 1);
+  }
+
+  getOldestWeights() {
+    let lastUsed = Date.now();
+    const oldestWeights = [];
+
+    for (const key in this.info)
+      for (let i = 0; i < this.info[key].length; i++)
+        if (lastUsed > this.info[key][i].lastUsed) {
+          oldestWeights.push({ ...this.info[key][i], index: i, sequence: key });
+          lastUsed = oldestWeights[oldestWeights.length - 1].lastUsed;
+        }
+
+    return oldestWeights;
   }
 
   getPointersAndPadStartCount() {
