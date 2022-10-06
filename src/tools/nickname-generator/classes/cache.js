@@ -8,6 +8,7 @@ export default class Cache {
     this.weights = {};
     this.info = {};
     this.pointers = {};
+    this.chancesCache = {};
     this.size = 0;
     this.param = {
       modelPath: args.modelPath,
@@ -22,51 +23,74 @@ export default class Cache {
   }
 
   addCharacterIfAvailable(preNickname) {
-    const strToCompare = preNickname.getStringToWeights();
     if (!this.info[preNickname.sequence]) return;
+
+    const strToCompare = preNickname.getStringToWeights();
+
     for (let i = 0, info; i < this.info[preNickname.sequence].length; i++) {
       info = this.info[preNickname.sequence][i];
       if (
         strToCompare.localeCompare(info.from) >= 0 &&
         strToCompare.localeCompare(info.to) === -1
       ) {
-        const foundedWeights =
+        const foundedChances =
           this.weights[preNickname.sequence][info.from][strToCompare];
-        const foundedWeightsInfo = info;
-        if (foundedWeights !== undefined)
+        const foundedChancesInfo = info;
+        if (foundedChances) {
+          const chancesCache = this.getChancesCache(
+            preNickname.sequence,
+            info.from,
+            strToCompare,
+            foundedChances
+          );
           this.addAvailableCharacter(
             preNickname,
-            foundedWeights,
-            foundedWeightsInfo
+            foundedChances,
+            foundedChancesInfo,
+            chancesCache
           );
-        else preNickname.decreaseSequence();
+        } else preNickname.decreaseSequence();
         break;
       }
     }
   }
 
-  addAvailableCharacter(preNickname, chances, chancesInfo) {
-    const chars = Object.keys(chances);
-		if (chars.length === 0) return preNickname.randomizeSequence();
-    let weightsCounter = Object.values(chances).reduce((acc, val) => acc + val);
+  addAvailableCharacter(preNickname, chances, chancesInfo, chancesCache) {
+    const chars = chancesCache.chars;
+    if (chars.length === 0) return preNickname.randomizeSequence();
+    let chancesSum = chancesCache.sum;
 
-    const randomNumber = random(1, weightsCounter);
+    const randomNumber = random(1, chancesSum);
 
-    weightsCounter = 0;
+    chancesSum = 0;
     let nextChar;
     for (let i = chars.length; i--; ) {
       if (
-        randomNumber > weightsCounter &&
-        randomNumber <= weightsCounter + chances[chars[i]]
+        randomNumber > chancesSum &&
+        randomNumber <= chancesSum + chances[chars[i]]
       ) {
         nextChar = chars[i];
         break;
-      }
-      weightsCounter += chances[chars[i]];
+      } else chancesSum += chances[chars[i]];
     }
     preNickname.addCharacters(nextChar);
     preNickname.randomizeSequence();
     chancesInfo.lastUsed = Date.now();
+  }
+
+  getChancesCache(sequence, chancesFrom, chancesString, chances) {
+    if (!this.chancesCache[sequence]) this.chancesCache[sequence] = {};
+
+    if (!this.chancesCache[sequence][chancesFrom])
+      this.chancesCache[sequence][chancesFrom] = {};
+
+    if (!this.chancesCache[sequence][chancesFrom][chancesString])
+      this.chancesCache[sequence][chancesFrom][chancesString] = {
+        sum: Object.values(chances).reduce((acc, val) => acc + val),
+        chars: Object.keys(chances),
+      };
+
+    return this.chancesCache[sequence][chancesFrom][chancesString];
   }
 
   loadWeights(preNickname) {
@@ -110,7 +134,8 @@ export default class Cache {
         this.weights[preNickname.sequence][pointersForSequence[i]] =
           foundedWeightsPart;
 
-        if (!this.info[preNickname.sequence]) this.info[preNickname.sequence] = [];
+        if (!this.info[preNickname.sequence])
+          this.info[preNickname.sequence] = [];
 
         this.info[preNickname.sequence].push({
           from: pointersForSequence[i],
@@ -155,6 +180,7 @@ export default class Cache {
       );
       this.info[oldestWeights.sequence].splice(oldestWeights.index, 1);
       delete this.weights[oldestWeights.sequence][oldestWeights.from];
+      delete this.weightsCounter[oldestWeights.sequence][oldestWeights.from];
       global.gc();
     }
   }
