@@ -6,7 +6,7 @@ export default class PreNicknames {
     this.param = param;
     this.length = 0;
     this.i = 0;
-    this.forChances = 0;
+    this.chance = 0;
     this.temp = undefined;
 
     this.add(count);
@@ -26,22 +26,25 @@ export default class PreNicknames {
   get() {
     return this.preNicknames[this.i];
   }
-  getForChances(getNew = false) {
-    if (getNew) {
-      let sequenceToFind = this.getForChances()
-        ? this.getForChances().sequence
-        : -1;
-      while (sequenceToFind >= 0) {
-        for (let i = this.length; i--; )
-          if (this.preNicknames[i].sequence === sequenceToFind) {
-            this.forChances = i;
-            return this.getForChances();
-          }
-        sequenceToFind--;
-      }
-      this.forChances = 0;
+  next() {
+    if (this.i < 0) this.i = this.length - 1;
+    return this.preNicknames[this.i--];
+  }
+  getForChances() {
+    let sequenceToFind = this.forChances() ? this.forChances().sequence : -1;
+    while (sequenceToFind >= 0) {
+      for (let i = this.length; i--; )
+        if (this.preNicknames[i].sequence === sequenceToFind) {
+          this.chance = i;
+          return this.forChances();
+        }
+      sequenceToFind--;
     }
-    return this.preNicknames[this.forChances];
+    this.chance = 0;
+    return this.forChances();
+  }
+  forChances() {
+    return this.preNicknames[this.chance];
   }
   *[Symbol.iterator]() {
     for (this.i = this.preNicknames.length; this.i--; )

@@ -26,7 +26,6 @@ export default class Generator {
       counterMultiplier: args.counterMultiplier,
       generateAttempts: args.generateAttempts,
       progressAccuracy: args.progressAccuracy,
-      deleteDuplicates: args.deleteDuplicates,
       endSuddenly: args.endSuddenly,
     };
     this.progress = {
@@ -47,9 +46,7 @@ export default class Generator {
   }
 
   calculateAndWriteProgress() {
-    const current = this.param.deleteDuplicates
-      ? this.param.count - this.preNicknames.length
-      : this.nicknames.length;
+    const current = this.nicknames.length;
 
     this.progress.current =
       Math.round(
@@ -59,7 +56,7 @@ export default class Generator {
 
     if (this.progress.current <= this.progress.previous) {
       if (this.preNicknames.length > 0)
-        this.cache.loadWeights(this.preNicknames.getForChances(true));
+        this.cache.loadWeights(this.preNicknames.getForChances());
       this.progress.counterUntilDrop++;
     } else {
       log(
@@ -81,13 +78,11 @@ export default class Generator {
   }
 
   areNicknamesGenerated() {
-    return this.param.deleteDuplicates
-      ? this.preNicknames.length > 0
-      : this.nicknames.length < this.param.count;
+    return this.nicknames.length < this.param.count;
   }
 
   generateNicknames() {
-    this.cache.loadWeights(this.preNicknames.getForChances(true));
+    this.cache.loadWeights(this.preNicknames.getForChances());
     while (this.areNicknamesGenerated()) {
       for (const preNickname of this.preNicknames)
         this.processPreNickname(preNickname);
@@ -117,10 +112,9 @@ export default class Generator {
   }
 
   checkPreNicknamesCount() {
-    if (!this.param.deleteDuplicates)
-      this.preNicknames.add(
-        this.param.count * this.param.counterMultiplier -
-          (this.preNicknames.length + this.nicknames.length)
-      );
+    this.preNicknames.add(
+      this.param.count * this.param.counterMultiplier -
+        (this.preNicknames.length + this.nicknames.length)
+    );
   }
 }
