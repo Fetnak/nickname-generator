@@ -72,9 +72,20 @@ argv.command({
       alias: "c",
       describe: "Size of the processed chunk at a time (in MB).",
       type: "number",
-      choices: [1, 2, 4, 8, 16, 32, 64, 128, 256],
       default: 16,
     },
+		sizeLimit: {
+			alias: "sl",
+			describe: "Limit for each file with words (in MB).",
+			type: "number",
+			default: 4,
+		},
+		partsToLoad: {
+			alias: "p",
+			describe: "How many word files are stored in RAM during processing.",
+			type: "number",
+			default: 5,
+		},
     language: {
       alias: "l",
       describe: "Language of the text.",
@@ -82,25 +93,22 @@ argv.command({
       choices: ["eng", "engr", "lat", "rus", "bel", "ukr", "ita", "swe", "fre", "deu", "spa"],
       default: "eng",
     },
-    sort: {
-      alias: "s",
-      describe: "Sort words by count in result file.",
-      type: "string",
-      choices: ["none", "asc", "desc"],
-      default: "none",
-    },
+		alphabet: {
+			alias: "a",
+			describe: "Custom alphabet.",
+			type: "string",
+		},
     uuid: {
       alias: "u",
       describe: "Select your own uuid instead of random.",
       type: "string",
     },
-    describtion: {
+    description: {
       describe: "Description. Just description.",
       type: "string",
     },
   },
   handler(argv) {
-    argv.chunk *= 1024 * 1024;
     countWords(argv);
   },
 });

@@ -9,8 +9,7 @@ export default class Nicknames {
     this.lengths = new Lengths(args);
     this.preNicknames = [];
     this.preNicknameForLoadWeights;
-    this.nicknames = {};
-    this.nicknamesCount = 0;
+    this.nicknames = new Set();
     this.preNicknameParam = {
       beginning: args.beginning,
       minimum: args.minimum,
@@ -39,7 +38,7 @@ export default class Nicknames {
   needToDrop() {
     if (this.progress.counterUntilDrop > this.param.generateAttempts) {
       console.log(
-        `Nicknames have been created for too long! Generated only ${this.nicknamesCount} nicknames from ${this.param.count} planned.`
+        `Nicknames have been created for too long! Generated only ${this.nicknames.size} nicknames from ${this.param.count} planned.`
       );
       return true;
     }
@@ -49,7 +48,7 @@ export default class Nicknames {
   calculateAndWriteProgress() {
     const current = this.param.deleteDuplicates
       ? this.param.count - this.preNicknames.length
-      : this.nicknamesCount;
+      : this.nicknames.size;
 
     this.progress.current =
       Math.round(
@@ -73,9 +72,8 @@ export default class Nicknames {
   }
 
   movePreNicknameToNicknames(preNickname, preNicknameIndex) {
-    if (!this.nicknames[preNickname.name]) {
-      this.nicknames[preNickname.name] = 1;
-      this.nicknamesCount++;
+    if (!this.nicknames.has(preNickname.name)) {
+      this.nicknames.add(preNickname.name);
       this.lengths.decreaseLength(preNickname.name);
     }
     this.deletePreNickname(preNicknameIndex);
@@ -84,7 +82,7 @@ export default class Nicknames {
   areNicknamesGenerated() {
     return this.param.deleteDuplicates
       ? this.preNicknames.length > 0
-      : this.nicknamesCount < this.param.count;
+      : this.nicknames.size < this.param.count;
   }
 
   generateNicknames() {
@@ -99,7 +97,7 @@ export default class Nicknames {
 
       this.cache.deleteOldestWeights();
     }
-    return Object.keys(this.nicknames).map((x) => firstCharToCapital(x));
+    return Array.from(this.nicknames).map((x) => firstCharToCapital(x));
   }
 
   processPreNickname(preNickname, index) {
@@ -125,7 +123,7 @@ export default class Nicknames {
     if (!this.param.deleteDuplicates)
       this.addPreNicknames(
         this.param.count * this.param.counterMultiplier -
-          (this.preNicknames.length + this.nicknamesCount)
+          (this.preNicknames.length + this.nicknames.size)
       );
   }
 
