@@ -2,16 +2,16 @@ import { random } from "../functions/random.js";
 
 export default class PreNickname {
   constructor(param) {
-    this.name = param.beginning;
-    this.sequence;
     this.param = param;
+    this.name = param.beginning;
+    this.sequence = this.randomizeSequence();
     /* param keys: beginning, minimum. maximum, minAccuracy, maxAccuracy, dummy */
-    this.randomizeSequence();
   }
 
   addCharacters(str) {
     this.name += str;
   }
+
   isEnded() {
     if (this.name.slice(-this.param.dummy.length) === this.param.dummy)
       return true;
@@ -29,7 +29,7 @@ export default class PreNickname {
   }
 
   randomizeSequence() {
-    this.sequence = Math.min(
+    return this.sequence = Math.min(
       random(this.param.minAccuracy, this.param.maxAccuracy),
       this.withoutEnding().length
     );

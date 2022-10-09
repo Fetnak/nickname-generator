@@ -1,23 +1,26 @@
 import { log } from "../../../functions/log.js";
 import firstCharToCapital from "../functions/first-char-to-capital.js";
-import PreNickname from "./pre-nickname.js";
+import PreNicknames from "./pre-nicknames.js";
+import Nicknames from "./nicknames.js";
 import Lengths from "./lengths.js";
 
 export default class Generator {
   constructor(args, cache) {
     this.cache = cache;
     this.lengths = new Lengths(args);
-    this.preNicknames = [];
     this.preNicknameForLoadWeights;
-    this.nicknames = new Set();
-    this.preNicknameParam = {
-      beginning: args.beginning,
-      minimum: args.minimum,
-      maximum: args.maximum,
-      minAccuracy: args.minAccuracy,
-      maxAccuracy: args.maxAccuracy,
-      dummy: args.dummy,
-    };
+    this.nicknames = new Nicknames();
+    this.preNicknames = new PreNicknames(
+      {
+        beginning: args.beginning,
+        minimum: args.minimum,
+        maximum: args.maximum,
+        minAccuracy: args.minAccuracy,
+        maxAccuracy: args.maxAccuracy,
+        dummy: args.dummy,
+      },
+      args.count * args.counterMultiplier
+    );
     this.param = {
       count: args.count,
       counterMultiplier: args.counterMultiplier,
@@ -31,14 +34,12 @@ export default class Generator {
       current: -1,
       counterUntilDrop: 0,
     };
-
-    this.addPreNicknames(args.count * args.counterMultiplier);
   }
 
   needToDrop() {
     if (this.progress.counterUntilDrop > this.param.generateAttempts) {
       console.log(
-        `Nicknames have been created for too long! Generated only ${this.nicknames.size} nicknames from ${this.param.count} planned.`
+        `Nicknames have been created for too long! Generated only ${this.nicknames.length} nicknames from ${this.param.count} planned.`
       );
       return true;
     }
@@ -48,7 +49,7 @@ export default class Generator {
   calculateAndWriteProgress() {
     const current = this.param.deleteDuplicates
       ? this.param.count - this.preNicknames.length
-      : this.nicknames.size;
+      : this.nicknames.length;
 
     this.progress.current =
       Math.round(
@@ -58,7 +59,7 @@ export default class Generator {
 
     if (this.progress.current <= this.progress.previous) {
       if (this.preNicknames.length > 0)
-        this.cache.loadWeights(this.choosePreNicknameForLoadWeights());
+        this.cache.loadWeights(this.preNicknames.getForChances(true));
       this.progress.counterUntilDrop++;
     } else {
       log(
@@ -71,25 +72,25 @@ export default class Generator {
     }
   }
 
-  movePreNicknameToNicknames(preNickname, preNicknameIndex) {
+  movePreNicknameToNicknames(preNickname) {
     if (!this.nicknames.has(preNickname.name)) {
       this.nicknames.add(preNickname.name);
       this.lengths.decreaseLength(preNickname.name);
     }
-    this.deletePreNickname(preNicknameIndex);
+    this.preNicknames.delete();
   }
 
   areNicknamesGenerated() {
     return this.param.deleteDuplicates
       ? this.preNicknames.length > 0
-      : this.nicknames.size < this.param.count;
+      : this.nicknames.length < this.param.count;
   }
 
   generateNicknames() {
-    this.cache.loadWeights(this.choosePreNicknameForLoadWeights());
+    this.cache.loadWeights(this.preNicknames.getForChances(true));
     while (this.areNicknamesGenerated()) {
-      for (let i = this.preNicknames.length; i--; )
-        this.processPreNickname(this.preNicknames[i], i);
+      for (const preNickname of this.preNicknames)
+        this.processPreNickname(preNickname);
       this.calculateAndWriteProgress();
       if (this.needToDrop()) break;
 
@@ -97,60 +98,29 @@ export default class Generator {
 
       this.cache.deleteOldestWeights();
     }
-    return Array.from(this.nicknames).map((x) => firstCharToCapital(x));
+    return this.nicknames.toArray().map((x) => firstCharToCapital(x));
   }
 
-  processPreNickname(preNickname, index) {
+  processPreNickname(preNickname) {
     this.cache.addCharacterIfAvailable(preNickname);
     if (preNickname.isEnded()) {
       preNickname.removeEnding();
       if (this.lengths.isStringFits(preNickname.name))
-        this.movePreNicknameToNicknames(preNickname, index);
+        this.movePreNicknameToNicknames(preNickname);
       else preNickname.reset();
     } else if (this.param.endSuddenly) {
-      if (this.isNicknameAlreadyExists(preNickname.name)) {
+      if (this.nicknames.has(preNickname.name)) {
         if (!preNickname.isLengthFits()) preNickname.reset();
       } else if (this.lengths.isStringFits(preNickname.name))
-        this.movePreNicknameToNicknames(preNickname, index);
+        this.movePreNicknameToNicknames(preNickname);
     }
-  }
-
-  isNicknameAlreadyExists(nickname) {
-    return this.nicknames[nickname];
   }
 
   checkPreNicknamesCount() {
     if (!this.param.deleteDuplicates)
-      this.addPreNicknames(
+      this.preNicknames.add(
         this.param.count * this.param.counterMultiplier -
-          (this.preNicknames.length + this.nicknames.size)
+          (this.preNicknames.length + this.nicknames.length)
       );
-  }
-
-  choosePreNicknameForLoadWeights() {
-    let sequenceToFind = this.preNicknameForLoadWeights
-      ? this.preNicknameForLoadWeights.sequence
-      : -1;
-    while (sequenceToFind >= 0) {
-      this.preNicknames.forEach((item) => {
-        if (item.sequence === sequenceToFind)
-          return (this.preNicknameForLoadWeights = item);
-      });
-      sequenceToFind--;
-    }
-    return (this.preNicknameForLoadWeights = this.preNicknames[0]);
-  }
-
-  deletePreNickname(index) {
-    let indexLast = this.preNicknames.length - 1;
-    let temp = this.preNicknames[index];
-    this.preNicknames[index] = this.preNicknames[indexLast];
-    this.preNicknames[indexLast] = temp;
-    this.preNicknames.pop();
-  }
-
-  addPreNicknames(count) {
-    for (let i = count; i--; )
-      this.preNicknames.push(new PreNickname(this.preNicknameParam));
   }
 }
