@@ -3,7 +3,7 @@ import firstCharToCapital from "../functions/first-char-to-capital.js";
 import PreNickname from "./pre-nickname.js";
 import Lengths from "./lengths.js";
 
-export default class Nicknames {
+export default class Generator {
   constructor(args, cache) {
     this.cache = cache;
     this.lengths = new Lengths(args);
