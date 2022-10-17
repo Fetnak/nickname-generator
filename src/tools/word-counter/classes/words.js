@@ -86,4 +86,7 @@ export default class Words {
       this.compact(words1, words2);
     }
   }
+  *[Symbol.iterator]() {
+    for (let word in this.words) yield word;
+  }
 }

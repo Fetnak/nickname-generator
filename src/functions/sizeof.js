@@ -18,7 +18,9 @@ const sizeof = (object) => {
     case "object":
       if (object instanceof Array)
         return object.reduce((acc, val) => acc + sizeof(val), 0);
-      else for (const key in object) return sizeof(key) + sizeof(object[key]);
+      let size = 0;
+      for (let key in object) size += sizeof(key) + sizeof(object[key]);
+      return size;
     default:
       return 0;
   }
