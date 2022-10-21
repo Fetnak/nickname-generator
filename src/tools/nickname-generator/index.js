@@ -116,6 +116,10 @@ export default {
         "How many attempts to generate nicknames (effective for small models).",
       type: "number",
     },
+    seed: {
+      descrive: "Seed for random function.",
+      type: "number",
+    },
     lengthsMultiplier: {
       alias: "m",
       describe:

@@ -1,11 +1,11 @@
 {
   "name": "nickname-generator",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "Generates a password based on the probability of encountering a letter after the previous ones. Probabilities are calculated from any text, for example: from books",
   "main": "src/index.js",
   "scripts": {
     "start": "node --expose-gc src/index.js",
-    "dev": "nodemon src/index.js",
+    "dev": "node --inspect --expose-gc src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "type": "module",

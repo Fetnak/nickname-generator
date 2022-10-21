@@ -1,9 +1,26 @@
 import PreNickname from "./pre-nickname.js";
 
 export default class PreNicknames {
-  constructor(param, count = 0) {
+  constructor(
+    beginning,
+    minimum,
+    maximum,
+    minAccuracy,
+    maxAccuracy,
+    dummy,
+    random,
+    count = 0
+  ) {
     this.preNicknames = [];
-    this.param = param;
+    this.param = {
+      beginning,
+      minimum,
+      maximum,
+      minAccuracy,
+      maxAccuracy,
+      dummy,
+      random,
+    };
     this.length = 0;
     this.i = 0;
     this.chance = 0;

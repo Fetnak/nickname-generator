@@ -11,14 +11,13 @@ export default class Generator {
     this.preNicknameForLoadWeights;
     this.nicknames = new Nicknames();
     this.preNicknames = new PreNicknames(
-      {
-        beginning: args.beginning,
-        minimum: args.minimum,
-        maximum: args.maximum,
-        minAccuracy: args.minAccuracy,
-        maxAccuracy: args.maxAccuracy,
-        dummy: args.dummy,
-      },
+      args.beginning,
+      args.minimum,
+      args.maximum,
+      args.minAccuracy,
+      args.maxAccuracy,
+      args.dummy,
+      args.random,
       args.count * args.counterMultiplier
     );
     this.param = {

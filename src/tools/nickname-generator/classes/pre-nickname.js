@@ -1,5 +1,3 @@
-import { random } from "../functions/random.js";
-
 export default class PreNickname {
   constructor(param) {
     this.param = param;
@@ -29,10 +27,10 @@ export default class PreNickname {
   }
 
   randomizeSequence() {
-    return this.sequence = Math.min(
-      random(this.param.minAccuracy, this.param.maxAccuracy),
+    return (this.sequence = Math.min(
+      this.param.random(this.param.minAccuracy, this.param.maxAccuracy),
       this.withoutEnding().length
-    );
+    ));
   }
 
   decreaseSequence() {

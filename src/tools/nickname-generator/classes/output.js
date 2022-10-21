@@ -7,6 +7,7 @@ export default class Output {
     this.columns = args.columns;
     this.output = args.output;
     this.outputFilePath = args.outputFilePath;
+		this.random = args.random;
   }
 
   checkFilePath() {
@@ -64,7 +65,7 @@ export default class Output {
     let currentIndex = array.length,
       randomIndex;
     while (currentIndex != 0) {
-      randomIndex = Math.floor(Math.random() * currentIndex);
+      randomIndex = args.random(0, currentIndex);
       currentIndex--;
       [array[currentIndex], array[randomIndex]] = [
         array[randomIndex],

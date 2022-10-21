@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import sizeof from "../../../functions/sizeof.js";
-import { random } from "../functions/random.js";
 
 export default class Cache {
   constructor(args) {
@@ -10,6 +9,7 @@ export default class Cache {
     this.pointers = {};
     this.chancesCache = {};
     this.size = 0;
+		this.random = args.random;
     this.param = {
       modelPath: args.modelPath,
       maxAccuracy: args.maxAccuracy,
@@ -18,7 +18,6 @@ export default class Cache {
       endSuddenly: args.endSuddenly,
       cacheSize: args.cacheSize,
     };
-
     this.getPointersAndPadStartCount();
   }
 
@@ -58,7 +57,7 @@ export default class Cache {
   addAvailableCharacter(preNickname, chances, chancesInfo, chancesCache) {
     const chars = chancesCache.chars;
 
-    const randomNumber = random(1, chancesCache.sum);
+    const randomNumber = this.random(1, chancesCache.sum);
 
     let counter = 0,
       nextChar;

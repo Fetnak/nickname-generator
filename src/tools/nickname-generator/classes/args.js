@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import dayjs from "dayjs";
+import randomizer from "../functions/random.js"
 
 export default class Args {
   constructor(args) {
@@ -24,6 +25,8 @@ export default class Args {
     this.sort = args.sort;
     this.form = args.form;
     this.output = args.output;
+		this.seed = args.seed ? args.seed : Date.now() * 1000000 + process.pid;
+		this.random = randomizer(this.seed);
     this.outputFilePath = this.parseOutputFilePath();
     this.cacheSize = this.parseCacheSize();
   }
