@@ -65,7 +65,7 @@ export default class Output {
     let currentIndex = array.length,
       randomIndex;
     while (currentIndex != 0) {
-      randomIndex = args.random(0, currentIndex);
+      randomIndex = this.random(0, currentIndex);
       currentIndex--;
       [array[currentIndex], array[randomIndex]] = [
         array[randomIndex],
