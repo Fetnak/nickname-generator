@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import Args from "./classes/args.js";
 import Model from "./classes/model.js";
 import Words from "../../tools/word-counter/classes/words.js";
 import { log } from "../../functions/log.js";

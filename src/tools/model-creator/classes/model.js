@@ -1,7 +1,5 @@
 import fs from "fs";
 import path from "path";
-import dayjs from "dayjs";
-import * as uuid from "uuid";
 import Collection from "./collection.js";
 
 export default class Model {
@@ -55,13 +53,10 @@ export default class Model {
     this.fileParts[length]++;
     const data = newFormat
       ? this.collection(length).newFormat()
-      : this.collection(length).toSave()
-    fs.writeFileSync(
-      filepath,
-      JSON.stringify(data)
-    );
+      : this.collection(length).toSave();
+    fs.writeFileSync(filepath, JSON.stringify(data));
   }
-    checkSizeAndClear(size = -1, fullSize = 0) {
+  checkSizeAndClear(size = -1, fullSize = 0) {
     let previousSize = 0;
     let currentSizes = {};
     const currentSize = () =>
@@ -70,10 +65,9 @@ export default class Model {
       const collectionSize = this.collection(length).size;
       previousSize += collectionSize;
       if (collectionSize > size) {
-        currentSizes[length] = collectionSize;
         this.save(length);
         this.collection(length).clear();
-      }
+      } else currentSizes[length] = collectionSize;
     }
     if (currentSize() > fullSize) {
       const lengths = Object.keys(currentSizes);

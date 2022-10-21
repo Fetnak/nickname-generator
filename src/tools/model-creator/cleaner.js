@@ -3,26 +3,31 @@ import path from "path";
 import Collection from "./classes/collection.js";
 import { log } from "../../functions/log.js";
 
-const clean = (output, sizeLimit, fullSizeLimit, alphabet, dummy) => {
+const clean = (
+  output,
+  sizeLimit,
+  tempSizeLimit,
+  fullSizeLimit,
+  alphabet,
+  dummy
+) => {
   const lengths = getLengths(output);
   for (let length of lengths) {
     const lengthPath = path.join(output, length);
     const cols = new Collections(
       lengthPath,
       sizeLimit,
+      tempSizeLimit,
       fullSizeLimit,
       alphabet,
       dummy
     );
     while (!cols.isEmpty()) {
-      const col1 = cols.load(cols.names[0]);
       for (let i = 1, n = cols.names.length; i < n; i++) {
-        const col2 = cols.load(cols.names[i]);
-        cols.merge(col1, col2);
-        cols.separate(cols.names[i]);
+        cols.merge(0, i);
         cols.unloadCache();
       }
-      cols.finish(cols.names[0]);
+      cols.finish(0);
     }
     cols.pointers.finish(lengthPath);
     log(`"${length} sequence" processed.`);
@@ -34,54 +39,84 @@ const getLengths = (output) => {
 };
 
 class Collections {
-  constructor(lengthPath, sizeLimit, fullSizeLimit, alphabet, dummy) {
+  constructor(
+    lengthPath,
+    sizeLimit,
+    tempSizeLimit,
+    fullSizeLimit,
+    alphabet,
+    dummy
+  ) {
     this.collections = {};
     this.paths = {};
     this.lengthPath = lengthPath;
     this.sizeLimit = sizeLimit;
+    this.tempSizeLimit = tempSizeLimit;
     this.fullSizeLimit = fullSizeLimit;
     this.names = fs.readdirSync(lengthPath).map((a) => parseInt(a).toString());
     this.last = parseInt(this.names.slice(-1)[0]);
     this.pointers = new Pointers(alphabet, dummy);
   }
   fullPath(name) {
-    if (!this.paths[name])
-      this.paths[name] = path.join(
-        this.lengthPath,
-        name.padStart(6, "0") + "-data.json"
-      );
-    return this.paths[name];
+    try {
+      if (!this.paths[name])
+        this.paths[name] = path.join(
+          this.lengthPath,
+          name.padStart(6, "0") + "-data.json"
+        );
+      return this.paths[name];
+    } catch (error) {
+      console.log(error);
+      console.log(name);
+      console.log(this);
+      process.exit();
+    }
   }
   has(name) {
     return this.collections[name] !== undefined;
   }
   get(name) {
-    return this.collections[name];
-  }
-  load(name) {
     if (!this.has(name)) {
       this.collections[name] = new Collection();
       this.collections[name].load(this.fullPath(name));
     }
-    return this.get(name);
+    return this.collections[name];
   }
-  finish(name) {
-    if (this.names.length === 1) this.separate(name, true);
+  deleteIfEmpty(index) {
+    const name = this.names[index];
+    if (this.get(name).isEmpty()) {
+      const last = this.names[this.names.length - 1];
+      const temp = this.collections[name];
+      this.collections[name] = this.collections[last];
+      this.collections[last] = temp;
+      this.unload(last, true);
+      this.last = parseInt(last) - 1;
+      this.names.pop();
+      return true;
+    } else return false;
+  }
+  finish(index) {
+    const name = this.names[index];
     this.pointers.add(this.get(name).getPointer());
+    this.separate(index, true);
     this.unload(name, true);
     this.names = this.names.filter((Name) => Name !== name);
   }
-  separate(name, needToSort = false) {
-    if (this.get(name).size >= this.sizeLimit) {
+  separate(index, needToSort = false) {
+    const size = needToSort ? this.sizeLimit : this.tempSizeLimit;
+    const name = this.names[index];
+    if (this.get(name).size >= size) {
+      const tempCollection = this.collections[name];
+      this.collections[name] = Collection.separate(
+        this.get(name),
+        size,
+        needToSort
+      );
+      if (tempCollection.isEmpty()) return;
       this.last++;
       const last = this.last.toString();
       this.names.push(last);
-      this.collections[last] = this.collections[name];
-      this.collections[name] = Collection.separate(
-        this.get(name),
-        this.sizeLimit,
-        needToSort
-      );
+      this.collections[last] = tempCollection;
     }
   }
   unload(name, deleteEmpty = false) {
@@ -96,7 +131,7 @@ class Collections {
     const names = Object.keys(this.collections).sort((a, b) =>
       a.localeCompare(b)
     );
-    const size = names.reduce((a, b) => a + this.get(b).size, 0);
+    let size = names.reduce((a, b) => a + this.get(b).size, 0);
     while (size >= this.fullSizeLimit && names.length > 0) {
       const last = names[names.length - 1];
       size -= this.get(last).size;
@@ -104,8 +139,12 @@ class Collections {
       names.pop();
     }
   }
-  merge(to, from) {
-    Collection.merge(to, from, this.sizeLimit);
+  merge(toIndex, fromIndex) {
+    Collection.merge(
+      this.get(this.names[toIndex]),
+      this.get(this.names[fromIndex]),
+      this.tempSizeLimit
+    );
   }
   isEmpty() {
     return this.names.length === 0;

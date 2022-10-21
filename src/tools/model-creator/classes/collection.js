@@ -24,7 +24,7 @@ export default class Collection {
   create(word, chancesObject) {
     if (!this.has(word)) {
       this.collection[word] = new Chances(chancesObject);
-      this.size += sizeof(word);
+      this.size += sizeof(word) + this.chances(word).size;
       if (this.isSorted) this.isSorted = false;
       return true;
     }
@@ -82,12 +82,18 @@ export default class Collection {
   }
   updateSize() {
     this.size = 0;
-    for (let word in this.collection)
+    for (let word in this.collection) {
       this.size += sizeof(word) + this.chances(word).size;
+    }
+  }
+  getSize() {
+    let size = 0;
+    for (let word in this.collection)
+      size += sizeof(word) + this.chances(word).size;
+    return size;
   }
   fromObject(object) {
     for (let word in object) this.create(word, object[word]);
-    this.updateSize();
   }
   static move(to, from, word) {
     if (!to.create(word)) to.size -= to.chances(word).size;
@@ -108,18 +114,16 @@ export default class Collection {
       this.compact(to, from);
 
       if (to.size < size && from.isEmpty()) return;
-      const a = [
+      const words = [
         ...Object.keys(to.collection),
         ...Object.keys(from.collection),
-      ].sort((a, b) => b.localeCompare(a));
+      ].sort((a, b) => a.localeCompare(b));
       let start = 0;
-      let end = a.length;
-      while (end > start) {
-        for (; end >= start && to.size < size; end--)
-          this.move(to, from, a[end]);
-        for (; start < end && to.size >= size; start++)
-          this.move(from, to, a[start]);
-      }
+      let end = words.length;
+      let previousSize = to.size;
+      for (; start < end && to.size - previousSize < size; start++)
+        this.move(to, from, words[start]);
+      for (; start < end; start++) this.move(from, to, words[start]);
     }
   }
   static compact(to, from) {

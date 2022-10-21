@@ -59,7 +59,7 @@ export default {
       alias: "sl",
       describe: "Limit for output chances files (in MB).",
       type: "number",
-      default: 8,
+      default: 1,
     },
     tempSizeLimit: {
       alias: "tsl",
@@ -71,7 +71,7 @@ export default {
       alias: "fsl",
       describe: "Limit for all temp files in RAM (in MB).",
       type: "number",
-      default: 512,
+      default: 128,
     },
     checkStep: {
       describe: "Step for check size of model data in RAM and logging.",
@@ -122,6 +122,7 @@ export default {
     clean(
       args.output,
       args.sizeLimit,
+      args.tempSizeLimit,
       args.fullSizeLimit,
       info.wordsInfo.alphabet,
       args.dummy

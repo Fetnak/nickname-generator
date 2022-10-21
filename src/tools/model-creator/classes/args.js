@@ -9,7 +9,7 @@ export default class Args {
     this.output = path.join(args.output, "model-" + this.outputUuid);
     this.dummy = "_";
     this.sequence = Math.max(1, args.sequence);
-    this.sizeLimit = Math.max(1, args.sizeLimit) * 1024 * 1024;
+    this.sizeLimit = Math.max(0.1, args.sizeLimit) * 1024 * 1024;
     this.tempSizeLimit = Math.max(1, args.tempSizeLimit) * 1024 * 1024;
     this.fullSizeLimit = Math.max(1, args.fullSizeLimit) * 1024 * 1024;
     this.checkStep = Math.max(1, args.checkStep);
