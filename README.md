@@ -125,6 +125,16 @@ By default, generator calculates 240 nicknames (you can change it using `--count
 
 For additional information use `pnpm start nicknameGenerator --help`
 
+# To-do list
+- [ ] Use byte arrays instead of strings in models.
+- [ ] Use arrays instead of objects to store weights.
+- [x] Use 2 or more characters to generate next.
+- [x] Calculate beginning characters.
+- [ ] Make beginning-characters-weights from ending-characters-weights.
+- [ ] Use normal names as model identifiers (It was a bad idea to use UUID).
+- [ ] Creating model from text file in one command.
+- [ ] Hide logs and make `--verbose` option to write them.
+
 # Help
 
 ## Main help
