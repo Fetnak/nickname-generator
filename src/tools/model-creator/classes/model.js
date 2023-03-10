@@ -10,20 +10,27 @@ export default class Model {
     this.model = {};
     this.fileParts = {};
 
-    for (let i = 0; i <= this.sequence; i++) this.fileParts[i] = 0;
+    for (let i = -this.sequence; i <= this.sequence; i++) this.fileParts[i] = 0;
   }
   addWord(word, count = 1) {
     for (let i = 1, n = Math.min(this.sequence, word.length - 1); i <= n; i++)
       this.separateAndAdd(word, i, count);
   }
   separateAndAdd(word, sequence, count = 1) {
-    this.add("", word[0], count);
-    for (let i = 0, n = word.length - sequence; i < n; i++)
-      this.add(word.slice(i, i + sequence), word[i + sequence], count);
-    this.add(word.slice(-sequence), this.dummy, count);
+    this.add("", word[0], count, 0);
+    for (let i = 0, n = word.length - sequence; i < n; i++) {
+      this.add(
+        word.slice(i, i + sequence),
+        word[i + sequence],
+        count,
+        sequence
+      );
+      this.add(word.slice(i + 1, i + 1 + sequence), word[i], count, -sequence);
+    }
+    this.add(word.slice(-sequence), this.dummy, count, sequence);
+    this.add(word.slice(0, sequence), this.dummy, count, -sequence);
   }
-  add(word, char, count = 1) {
-    const length = word.length;
+  add(word, char, count = 1, length) {
     if (this.has(length))
       this.model[length].add(this.dummy + word, char, count);
     else {
@@ -41,14 +48,11 @@ export default class Model {
     this.collections(length).clear();
   }
   save(length, newFormat = false) {
-    const folderpath = path.join(
-      this.output,
-      length.toString().padStart(this.sequence.length, "0")
-    );
+    const folderpath = path.join(this.output, length);
     this.checkFolder(folderpath);
     const filepath = path.join(
       folderpath,
-      this.fileParts[length].toString().padStart(6, "0") + "-data.json"
+      this.fileParts[length] + "-data.json"
     );
     this.fileParts[length]++;
     const data = newFormat

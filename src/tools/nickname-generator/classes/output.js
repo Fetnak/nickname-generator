@@ -7,7 +7,7 @@ export default class Output {
     this.columns = args.columns;
     this.output = args.output;
     this.outputFilePath = args.outputFilePath;
-		this.random = args.random;
+    this.random = args.random;
   }
 
   checkFilePath() {
@@ -62,15 +62,13 @@ export default class Output {
   }
 
   shuffleArray(array) {
-    let currentIndex = array.length,
-      randomIndex;
-    while (currentIndex != 0) {
-      randomIndex = this.random(0, currentIndex);
-      currentIndex--;
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex],
-        array[currentIndex],
-      ];
+    let randomIndex;
+		let tmp;
+    for (let currentIndex in array) {
+      randomIndex = this.random(0, array.length - 1);
+			tmp = array[currentIndex];
+			array[currentIndex] = array[randomIndex];
+			array[randomIndex] = tmp;
     }
     return array;
   }
@@ -78,7 +76,7 @@ export default class Output {
   outputArrayAsTable(array, columns) {
     let string = "";
     let padding = 0;
-    array.forEach((item) => (padding = Math.max(item.length, padding)));
+    for (let item of array) padding = Math.max(item.length, padding);
     padding++;
 
     if (columns < 1) columns = Math.floor(process.stdout.columns / padding);

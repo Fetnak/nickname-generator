@@ -1,44 +1,95 @@
 export default class PreNickname {
   constructor(param) {
     this.param = param;
-    this.name = param.beginning;
-    this.sequence = this.randomizeSequence();
-    /* param keys: beginning, minimum. maximum, minAccuracy, maxAccuracy, dummy */
+    /* param keys: part, partPosition, minimum, maximum, minAccuracy, maxAccuracy, dummy, random() */
+    this.reset();
   }
 
-  addCharacters(str) {
-    this.name += str;
+  reset() {
+    this.name = this.param.part;
+    this.beginLength =
+      this.param.partPosition === -1
+        ? this.param.random(0, this.param.maximum - this.name.length)
+        : Math.round(
+            (this.param.maximum - this.name.length) * this.param.partPosition
+          );
+    this.endLength = this.param.maximum - this.beginLength - this.name.length;
+    this.begin = this.beginLength > 0 ? false : true;
+    this.end = this.endLength > 0 ? false : true;
+		this.positive = true;
+    this.positive = this.changePositive();
+    this.sequence = this.randomSequence();
   }
 
-  isEnded() {
-    if (this.name.slice(-this.param.dummy.length) === this.param.dummy)
-      return true;
-    return false;
-  }
-
-  withoutEnding() {
-    if (this.isEnded())
-      return this.name.substring(0, this.name.length - this.param.dummy.length);
+  getName() {
     return this.name;
   }
 
-  removeEnding() {
-    this.name = this.withoutEnding();
+  getSequence() {
+    return this.positive ? this.sequence : -this.sequence;
+  }
+
+  addCharacter(char) {
+    if (char === this.param.dummy) {
+      if (this.positive) this.setEnd();
+      else this.setBegin();
+    } else {
+      if (this.positive) this.addEndCharacter(char);
+      else this.addBeginCharacter(char);
+    }
+  }
+
+  addBeginCharacter(char) {
+    this.name = char + this.name;
+    if (!--this.beginLength) this.setBegin();
+  }
+
+  addEndCharacter(char) {
+    this.name = this.name + char;
+    if (!--this.endLength) this.setEnd();
+  }
+
+  isDone() {
+    return this.end && this.begin;
+  }
+
+  setEnd() {
+    this.end = true;
+  }
+
+  setBegin() {
+    this.begin = true;
+  }
+
+  randomSequence() {
+    return Math.min(
+      this.param.random(this.param.minAccuracy, this.param.maxAccuracy),
+      this.name.length
+    );
   }
 
   randomizeSequence() {
-    return (this.sequence = Math.min(
-      this.param.random(this.param.minAccuracy, this.param.maxAccuracy),
-      this.withoutEnding().length
-    ));
+    this.positive = this.changePositive();
+    this.sequence = this.randomSequence();
+  }
+
+  changePositive() {
+    if (!this.begin && !this.end) return !this.positive;
+    else if (!this.begin && this.end) return false;
+    else if (this.begin && !this.end) return true;
   }
 
   decreaseSequence() {
-    this.sequence = Math.max(this.param.minAccuracy, this.sequence - 1);
+    if (this.sequence > this.param.minAccuracy) this.sequence--;
   }
 
-  getStringToWeights() {
-    return this.param.dummy + this.name.slice(-this.sequence);
+  forWeights() {
+    return (
+      this.param.dummy +
+      (this.positive
+        ? this.name.slice(-this.sequence)
+        : this.name.slice(0, this.sequence))
+    );
   }
 
   isLengthFits() {
@@ -46,10 +97,5 @@ export default class PreNickname {
       this.name.length >= this.param.minimum &&
       this.name.length <= this.param.maximum
     );
-  }
-
-  reset() {
-    this.name = this.param.beginning;
-    this.randomizeSequence();
   }
 }

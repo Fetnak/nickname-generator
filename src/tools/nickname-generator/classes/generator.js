@@ -11,7 +11,8 @@ export default class Generator {
     this.preNicknameForLoadWeights;
     this.nicknames = new Nicknames();
     this.preNicknames = new PreNicknames(
-      args.beginning,
+      args.part,
+      args.partPosition,
       args.minimum,
       args.maximum,
       args.minAccuracy,
@@ -55,7 +56,7 @@ export default class Generator {
 
     if (this.progress.current <= this.progress.previous) {
       if (this.preNicknames.length > 0)
-        this.cache.loadWeights(this.preNicknames.getForChances());
+        this.cache.loadWeights(this.preNicknames.getForSelectChances());
       this.progress.counterUntilDrop++;
     } else {
       log(
@@ -69,10 +70,8 @@ export default class Generator {
   }
 
   movePreNicknameToNicknames(preNickname) {
-    if (!this.nicknames.has(preNickname.name)) {
-      this.nicknames.add(preNickname.name);
-      this.lengths.decreaseLength(preNickname.name);
-    }
+    if (this.nicknames.add(preNickname.getName()))
+      this.lengths.decreaseLength(preNickname.getName());
     this.preNicknames.delete();
   }
 
@@ -81,7 +80,7 @@ export default class Generator {
   }
 
   generateNicknames() {
-    this.cache.loadWeights(this.preNicknames.getForChances());
+    this.cache.loadWeights(this.preNicknames.forSelectChances());
     while (this.areNicknamesGenerated()) {
       for (const preNickname of this.preNicknames)
         this.processPreNickname(preNickname);
@@ -97,15 +96,14 @@ export default class Generator {
 
   processPreNickname(preNickname) {
     this.cache.addCharacterIfAvailable(preNickname);
-    if (preNickname.isEnded()) {
-      preNickname.removeEnding();
-      if (this.lengths.isStringFits(preNickname.name))
+    if (preNickname.isDone()) {
+      if (this.lengths.isStringFits(preNickname.getName()))
         this.movePreNicknameToNicknames(preNickname);
       else preNickname.reset();
     } else if (this.param.endSuddenly) {
-      if (this.nicknames.has(preNickname.name)) {
+      if (this.nicknames.has(preNickname.getName())) {
         if (!preNickname.isLengthFits()) preNickname.reset();
-      } else if (this.lengths.isStringFits(preNickname.name))
+      } else if (this.lengths.isStringFits(preNickname.getName()))
         this.movePreNicknameToNicknames(preNickname);
     }
   }

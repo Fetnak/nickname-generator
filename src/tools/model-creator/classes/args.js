@@ -16,6 +16,7 @@ export default class Args {
     this.lengthOfWord = Math.max(1, args.lengthOfWord);
     this.calculateEnding = args.calculateEnding;
     this.resetMultiplier = args.resetMultiplier;
+		console.log("UUID: " + this.outputUuid);
   }
 
   checkInputUuid(inputUuid) {

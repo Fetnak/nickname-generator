@@ -9,7 +9,7 @@ export default class Cache {
     this.pointers = {};
     this.chancesCache = {};
     this.size = 0;
-		this.random = args.random;
+    this.random = args.random;
     this.param = {
       modelPath: args.modelPath,
       maxAccuracy: args.maxAccuracy,
@@ -22,22 +22,23 @@ export default class Cache {
   }
 
   addCharacterIfAvailable(preNickname) {
-    if (!this.info[preNickname.sequence]) return;
+		const sequence = preNickname.getSequence();
+    if (!this.info[sequence]) return;
 
-    const strToCompare = preNickname.getStringToWeights();
+    const strToCompare = preNickname.forWeights();
 
-    for (let i = 0, info; i < this.info[preNickname.sequence].length; i++) {
-      info = this.info[preNickname.sequence][i];
+    for (let i = 0, info; i < this.info[sequence].length; i++) {
+      info = this.info[sequence][i];
       if (
         strToCompare.localeCompare(info.from) >= 0 &&
         strToCompare.localeCompare(info.to) === -1
       ) {
         const foundedChances =
-          this.weights[preNickname.sequence][info.from][strToCompare];
+          this.weights[sequence][info.from][strToCompare];
         const foundedChancesInfo = info;
         if (foundedChances) {
           const chancesCache = this.getChancesCache(
-            preNickname.sequence,
+            sequence,
             info.from,
             strToCompare,
             foundedChances
@@ -70,7 +71,7 @@ export default class Cache {
         break;
       } else counter += chances[chars[i]];
     }
-    preNickname.addCharacters(nextChar);
+    preNickname.addCharacter(nextChar);
     preNickname.randomizeSequence();
     chancesInfo.lastUsed = Date.now();
   }
@@ -91,24 +92,23 @@ export default class Cache {
   }
 
   loadWeights(preNickname) {
-    const strToFind = preNickname.getStringToWeights();
+    const strToFind = preNickname.forWeights();
+		const sequence = preNickname.getSequence();
 
     if (this.checkIfWeightsAdded(strToFind)) return;
 
-    const paddedSequence = preNickname.sequence
-      .toString()
-      .padStart(this.param.padStartCount, "0");
-    const pointersForSequence = this.pointers[paddedSequence];
+    const pointersForSequence = this.pointers[sequence];
     const sequenceWeightsPartsPath = path.join(
       this.param.modelPath,
-      paddedSequence
+      sequence.toString()
     );
     const weigthsPartsFileNames = fs
       .readdirSync(sequenceWeightsPartsPath)
-      .filter((name) => name !== "pointers.json");
+      .filter((name) => name !== "pointers.json")
+      .sort((a, b) => parseInt(a) - parseInt(b));
 
-    if (!this.weights[preNickname.sequence])
-      this.weights[preNickname.sequence] = {};
+    if (!this.weights[sequence])
+      this.weights[sequence] = {};
 
     for (let i = 0; i < pointersForSequence.length - 1; i++) {
       if (
@@ -135,7 +135,7 @@ export default class Cache {
         }
         this.addChances(
           foundedWeightsPart,
-          preNickname.sequence,
+          sequence,
           pointersForSequence[i],
           pointersForSequence[i + 1]
         );
@@ -205,13 +205,13 @@ export default class Cache {
     const sequenceFolders = fs
       .readdirSync(this.param.modelPath)
       .filter((name) => name !== "info.json");
-    for (let i = 0; i <= this.param.maxAccuracy; i++)
-      this.pointers[sequenceFolders[i]] = JSON.parse(
+    for (let folder of sequenceFolders)
+      this.pointers[folder] = JSON.parse(
         fs.readFileSync(
-          path.join(this.param.modelPath, sequenceFolders[i], "pointers.json")
+          path.join(this.param.modelPath, folder, "pointers.json")
         )
       );
-
-    this.param.padStartCount = sequenceFolders[0].length;
+		const temp =sequenceFolders.sort((a, b) => parseInt(b) - parseInt(a))
+    this.param.padStartCount = temp[0].length;
   }
 }

@@ -15,6 +15,7 @@ export default class Args {
     this.description = args.description;
     this.sizeLimit = Math.max(1, Math.floor(args.sizeLimit)) * 1024 * 1024;
     this.partsToLoad = Math.max(2, args.partsToLoad);
+    console.log("UUID: " + this.uuid);
   }
   outputArgs() {
     delete this.args;
@@ -25,7 +26,6 @@ export default class Args {
 
     switch (this.args.language) {
       case "eng":
-      case "lat":
       case "fre":
       case "ita":
         return "abcdefghijklmnopqrstuvwxyz";

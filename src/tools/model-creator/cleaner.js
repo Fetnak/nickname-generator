@@ -53,24 +53,17 @@ class Collections {
     this.sizeLimit = sizeLimit;
     this.tempSizeLimit = tempSizeLimit;
     this.fullSizeLimit = fullSizeLimit;
-    this.names = fs.readdirSync(lengthPath).map((a) => parseInt(a).toString());
+    this.names = fs
+      .readdirSync(lengthPath)
+      .sort((a, b) => parseInt(a) - parseInt(b))
+      .map((a) => parseInt(a).toString());
     this.last = parseInt(this.names.slice(-1)[0]);
     this.pointers = new Pointers(alphabet, dummy);
   }
   fullPath(name) {
-    try {
-      if (!this.paths[name])
-        this.paths[name] = path.join(
-          this.lengthPath,
-          name.padStart(6, "0") + "-data.json"
-        );
-      return this.paths[name];
-    } catch (error) {
-      console.log(error);
-      console.log(name);
-      console.log(this);
-      process.exit();
-    }
+    if (!this.paths[name])
+      this.paths[name] = path.join(this.lengthPath, name + "-data.json");
+    return this.paths[name];
   }
   has(name) {
     return this.collections[name] !== undefined;

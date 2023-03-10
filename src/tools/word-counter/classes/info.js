@@ -8,7 +8,6 @@ export default class Info {
     this.start = Date.now();
   }
   save(filepath) {
-    this.finish();
     const info = {
       uuid: this.args.uuid,
       name: path.basename(this.args.input, ".txt"),
@@ -27,7 +26,6 @@ export default class Info {
       rus: "Russian",
       bel: "Belarusian",
       urk: "Ukrainian",
-      lat: "Latin",
       eng: "English",
       ita: "Italian",
       swe: "Swedish",

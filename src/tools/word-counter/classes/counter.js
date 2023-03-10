@@ -21,7 +21,6 @@ export default class Counter {
 
   checkOutputFolderPath() {
     try {
-      console.log(this.output);
       fs.mkdirSync(this.output, { recursive: true });
     } catch (error) {
       console.log("Unable to create output file!");

@@ -1,0 +1,15 @@
+{
+  "uuid": "a4ab9a86-0a24-41b0-a7ed-d095e0faef3a",
+  "uuidWords": "200ff5c5-7cbe-45a4-b4e8-d49b78218bd8",
+  "name": "Default model",
+  "createdAt": "2000-01-01 01-00-00",
+  "alphabet": "abcdefghijklmnopqrstuvwxyz",
+  "maxSequenceLength": 5,
+  "sourceSize": "242986 bytes",
+  "toWordsProcessingTime": "112 ms",
+  "toModelProcessingTime": "1648 ms",
+  "language": "English",
+  "version": "3.3.3",
+  "dummy": "_",
+  "calculatedEndings": true
+}

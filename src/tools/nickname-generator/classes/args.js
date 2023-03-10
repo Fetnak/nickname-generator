@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import dayjs from "dayjs";
-import randomizer from "../functions/random.js"
+import randomizer from "../functions/random.js";
 
 export default class Args {
   constructor(args) {
@@ -9,7 +9,8 @@ export default class Args {
     this.modelPath = this.parseModelPath();
     this.modelInfo = this.loadModelInfo();
     this.dummy = this.modelInfo.dummy;
-    this.beginning = this.parseBeginning();
+    this.part = this.parsePart();
+    this.partPosition = this.parsePartPosition();
     this.count = this.args.count;
     this.columns = this.args.columns;
     this.sort = this.args.sort;
@@ -25,8 +26,8 @@ export default class Args {
     this.sort = args.sort;
     this.form = args.form;
     this.output = args.output;
-		this.seed = args.seed ? args.seed : Date.now() * 1000000 + process.pid;
-		this.random = randomizer(this.seed);
+    this.seed = args.seed ? args.seed : Date.now() * 100000 + process.pid;
+    this.random = randomizer(this.seed);
     this.outputFilePath = this.parseOutputFilePath();
     this.cacheSize = this.parseCacheSize();
   }
@@ -41,18 +42,23 @@ export default class Args {
   loadModelInfo() {
     return JSON.parse(fs.readFileSync(path.join(this.modelPath, "info.json")));
   }
-  parseBeginning() {
+  parsePart() {
     const regex = new RegExp("[" + this.modelInfo.alphabet + "]");
     let name = "";
-    const beginning = this.args.beginning.toLowerCase();
-    for (const char of beginning) if (char.match(regex)) name += char;
+    const part= this.args.part.toLowerCase();
+    for (const char of part) if (char.match(regex)) name += char;
     return name;
   }
+  parsePartPosition() {
+		if (this.part.length === 0) return 0;
+    const tmp = this.args.partPosition;
+    return tmp === -1 ? -1 : Math.max(0, Math.min(1, tmp));
+  }
   parseMinimum() {
-    return this.beginning.length + Math.max(1, this.args.minimum);
+    return this.part.length + Math.max(1, this.args.minimum);
   }
   parseMaximum() {
-    return Math.max(this.minimum, this.beginning.length + this.args.maximum);
+    return Math.max(this.minimum, this.args.maximum + this.part.length);
   }
   parseEndSuddenly() {
     return !(!this.args.endSuddenly && this.modelInfo.calculatedEndings);

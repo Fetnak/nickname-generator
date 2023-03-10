@@ -4,13 +4,18 @@ export default class Nicknames {
     this.length = 0;
   }
   add(name) {
-    this.nicknames.add(name);
-    this.length = this.nicknames.size;
-    return this;
+    if (this.nicknames.has(name)) return false;
+    else {
+      this.nicknames.add(name);
+      this.length++;
+      return true;
+    }
   }
   delete(name) {
-    this.nicknames.delete(name);
-    this.length = this.nicknames.size;
+    if (this.nicknames.has(name)) {
+      this.nicknames.delete(name);
+      this.length--;
+    }
     return this;
   }
   has(name) {

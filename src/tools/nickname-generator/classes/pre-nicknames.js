@@ -2,7 +2,8 @@ import PreNickname from "./pre-nickname.js";
 
 export default class PreNicknames {
   constructor(
-    beginning,
+    part,
+    partPosition,
     minimum,
     maximum,
     minAccuracy,
@@ -13,7 +14,8 @@ export default class PreNicknames {
   ) {
     this.preNicknames = [];
     this.param = {
-      beginning,
+      part,
+      partPosition,
       minimum,
       maximum,
       minAccuracy,
@@ -35,9 +37,10 @@ export default class PreNicknames {
     this.length = this.preNicknames.length;
   }
   delete() {
-    this.temp = this.preNicknames[this.i];
-    this.preNicknames[this.i] = this.preNicknames[--this.length];
-    this.preNicknames[this.length] = this.temp;
+    [this.preNicknames[this.i], this.preNicknames[this.length]] = [
+      this.preNicknames[--this.length],
+      this.preNicknames[this.i],
+    ];
     this.preNicknames.pop();
   }
   get() {
@@ -47,20 +50,22 @@ export default class PreNicknames {
     if (this.i < 0) this.i = this.length - 1;
     return this.preNicknames[this.i--];
   }
-  getForChances() {
-    let sequenceToFind = this.forChances() ? this.forChances().sequence : -1;
+  getForSelectChances() {
+    let sequenceToFind = this.forSelectChances()
+      ? this.forSelectChances().sequence
+      : -1;
     while (sequenceToFind >= 0) {
       for (let i = this.length; i--; )
         if (this.preNicknames[i].sequence === sequenceToFind) {
           this.chance = i;
-          return this.forChances();
+          return this.forSelectChances();
         }
       sequenceToFind--;
     }
     this.chance = 0;
-    return this.forChances();
+    return this.forSelectChances();
   }
-  forChances() {
+  forSelectChances() {
     return this.preNicknames[this.chance];
   }
   *[Symbol.iterator]() {

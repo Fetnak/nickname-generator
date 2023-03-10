@@ -1,0 +1,10 @@
+{
+  "uuid": "200ff5c5-7cbe-45a4-b4e8-d49b78218bd8",
+  "name": "Default words",
+  "createdAt": "2000-01-01 01-00-00",
+  "alphabet": "abcdefghijklmnopqrstuvwxyz",
+  "sourceSize": "242986 bytes",
+  "toWordsProcessingTime": "112 ms",
+  "language": "English",
+  "vesrion": "3.3.3"
+}

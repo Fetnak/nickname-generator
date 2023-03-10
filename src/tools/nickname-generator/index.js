@@ -51,7 +51,7 @@ export default {
       default: 3,
     },
     progressAccuracy: {
-      alias: "pa",
+      alias: "A",
       describe: "Accuracy of progress percent.",
       type: "number",
     },
@@ -62,15 +62,15 @@ export default {
       default: 240,
     },
     counterMultiplier: {
-      alias: "cm",
+      alias: "M",
       describe:
         "Multiplier for the count of nicknames to speed up generation. Increases memory usage.",
       type: "number",
       default: 1,
     },
     columns: {
-      alias: "col",
-      describe: "How many columns will the nicknames be sorted into.",
+      alias: "C",
+      describe: "How many columns will the nicknames be sorted into (0 for auto).",
       type: "number",
       default: 12,
     },
@@ -99,11 +99,17 @@ export default {
       describe: "Display all available models.",
       type: "boolean",
     },
-    beginning: {
-      alias: "b",
-      describe: "The beginning of every nickname.",
+    part: {
+      alias: "p",
+      describe: "The part of every nickname.",
       type: "string",
       default: "",
+    },
+    partPosition: {
+      alias: "P",
+      describe: "The position of the part for every nickname. Can be [0, 1] or -1 for random.",
+      type: "number",
+      default: 0,
     },
     endSuddenly: {
       alias: "e",
@@ -111,13 +117,14 @@ export default {
       type: "boolean",
     },
     generateAttempts: {
-      alias: "ga",
+      alias: "g",
       describe:
         "How many attempts to generate nicknames (effective for small models).",
       type: "number",
     },
     seed: {
-      descrive: "Seed for random function.",
+			alias: "S",
+      describe: "Seed for random function.",
       type: "number",
     },
     lengthsMultiplier: {

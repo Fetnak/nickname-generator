@@ -52,8 +52,6 @@ export default {
       type: "string",
       choices: [
         "eng",
-        "engr",
-        "lat",
         "rus",
         "bel",
         "ukr",
